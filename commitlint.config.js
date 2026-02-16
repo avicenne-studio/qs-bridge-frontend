@@ -3,7 +3,7 @@ export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
     // Allowed types (Conventional Commits)
-    // feat, fix, docs, style, refactor, perf, test, build, ci, chore
+    // feat, fix, docs, style, refactor, perf, test, build, ci, chore.
     'type-enum': [
       2,
       'always',
@@ -18,7 +18,7 @@ export default {
         'build',    // Build, dependencies, etc.
         'ci',       // CI/CD
         'chore',    // Miscellaneous tasks
-      ],
+      ],    
     ],
     'subject-case': [2, 'always', 'lower-case'],
     'header-max-length': [2, 'always', 100],
