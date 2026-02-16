@@ -13,9 +13,9 @@ The React Compiler is enabled on this template. See [this documentation](https:/
 
 Note: This will impact Vite dev & build performances.
 
-## Lint et formatage
+## Lint and formatting
 
-- **Lint** : `npm run lint` (oxlint)
-- **Formatage** : `npm run format` pour formater, `npm run format:check` pour vérifier sans modifier
+- **Lint**: `npm run lint` (oxlint)
+- **Formatting**: `npm run format` to format, `npm run format:check` to check without modifying
 
-La configuration se trouve dans `.oxlintrc.json` et `.oxfmtrc.json`. Le pre-commit (Husky) exécute le lint et la vérification du format avant chaque commit.
+Configuration is in `.oxlintrc.json` and `.oxfmtrc.json`. The pre-commit hook (Husky) runs lint and format check before each commit.
