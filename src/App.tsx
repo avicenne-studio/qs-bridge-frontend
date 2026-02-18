@@ -1,9 +1,10 @@
-import QubicBridgeLogomark from "./components/ui/assets/qubic-bridge-logomark";
+import { Routes, Route } from "react-router-dom";
+import Home from "@/pages/Home";
 
 export default function App() {
   return (
-    <div className="w-screen p-8 text-center flex justify-center items-center h-screen">
-      <QubicBridgeLogomark />
-    </div>
+    <Routes>
+      <Route path="/" element={<Home />} />
+    </Routes>
   );
 }
