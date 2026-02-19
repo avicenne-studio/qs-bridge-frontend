@@ -37,7 +37,6 @@ export default function Sidebar() {
           isFullWidth
         />
       </div>
-
       <div className="flex w-full h-fit bg-primary">
         <StatusSection />
       </div>
