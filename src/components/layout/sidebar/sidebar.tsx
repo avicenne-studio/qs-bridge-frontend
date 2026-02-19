@@ -4,13 +4,13 @@ import { routes } from "@/constants/routes";
 import QubicBridgeLogomark from "@/components/core/assets/qubic-bridge-logomark";
 import StatusSection from "./components/status/status-section";
 import SidebarLink from "./components/sidebar-link";
-import Button from "@/components/core/buttons/button";
+import Button from "@/components/core/buttons/button/button";
 
 const navItems = [
   { path: routes.activity.path, name: routes.activity.name, Icon: Radio },
   { path: routes.bridge.path, name: routes.bridge.name, Icon: SendToBack },
   { path: routes.history.path, name: routes.history.name, Icon: History },
-] as const;
+];
 
 export default function Sidebar() {
   return (
@@ -37,6 +37,7 @@ export default function Sidebar() {
           isFullWidth
         />
       </div>
+
       <div className="flex w-full h-fit bg-primary">
         <StatusSection />
       </div>

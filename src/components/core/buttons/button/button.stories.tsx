@@ -36,21 +36,21 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    label: "Bouton",
+    label: "Button",
     variant: "default",
   },
 };
 
 export const Outline: Story = {
   args: {
-    label: "Bouton outline",
+    label: "Outline button",
     variant: "outline",
   },
 };
 
 export const WithIcon: Story = {
   args: {
-    label: "Avec icône",
+    label: "With icon",
     variant: "default",
     icon: <Plus size={16} />,
   },
@@ -58,7 +58,7 @@ export const WithIcon: Story = {
 
 export const Disabled: Story = {
   args: {
-    label: "Désactivé",
+    label: "Disabled",
     variant: "default",
     isDisabled: true,
   },
@@ -66,7 +66,7 @@ export const Disabled: Story = {
 
 export const FullWidth: Story = {
   args: {
-    label: "Pleine largeur",
+    label: "Full width",
     variant: "default",
     isFullWidth: true,
   },
@@ -74,7 +74,7 @@ export const FullWidth: Story = {
 
 export const AsInternalLink: Story = {
   args: {
-    label: "Lien interne",
+    label: "Internal link",
     variant: "default",
     path: "/activity",
     isInternalLink: true,
