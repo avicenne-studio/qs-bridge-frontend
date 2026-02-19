@@ -1,7 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-500: #0b1219;
-  --color-white-500: #ffffff;
-  --color-highlight-500: #23ffff;
+  /* Primary Colors */
+  /*500*/
+  --color-primary: #0b1219;
+
+  /*white colors*/
+  /*500*/
+  --color-white: #ffffff;
+
+  /* Highlight Colors */
+  /*500*/
+  --color-highlight: #23ffff;
+
+  /* Status section */
+  /* success colors */
+  --color-success: #007d0f;
+  --color-success-100: #f5faf5;
+
+  /* warning colors */
+  --color-warning: #7d5a00;
+  --color-warning-100: #faf9f5;
+
+  /* error colors */
+  --color-error: #7d0000;
+  --color-error-100: #faf5f5;
 }
