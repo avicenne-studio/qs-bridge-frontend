@@ -43,9 +43,7 @@ export default function MainLayout() {
           >
             {pageName}
           </span>
-          <div className="hidden xl:block">
-            <WalletArea />
-          </div>
+          <WalletArea />
         </div>
 
         <div className="size-full overflow-auto">
