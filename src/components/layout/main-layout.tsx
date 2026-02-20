@@ -15,9 +15,9 @@ export default function MainLayout() {
   return (
     <div
       className={cn(
-        "flex w-screen h-dvh overflow-hidden",
-        "bg-white xl:bg-primary",
-        "pt-[94px] xl:pt-4",
+        "flex w-screen h-dvh relative flex-col overflow-auto",
+        "bg-primary xl:bg-primary",
+        "xl:pt-4",
       )}
     >
       <TopBar />
