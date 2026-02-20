@@ -5,6 +5,7 @@ import QubicBridgeLogomark from "@/components/core/assets/qubic-bridge-logomark"
 import StatusSection from "./components/status/status-section";
 import SidebarLink from "./components/sidebar-link";
 import Button from "@/components/core/buttons/button/button";
+import cn from "@/utils/classnames";
 
 const navItems = [
   { path: routes.activity.path, name: routes.activity.name, Icon: Radio },
@@ -14,7 +15,7 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-[300px] h-full shrink-0 flex-col bg-white">
+    <aside className={cn("w-[300px] h-full shrink-0 flex-col bg-white", "hidden xl:flex")}>
       <NavLink
         to={routes.activity.path}
         className="flex h-[90px] items-center justify-center shrink-0 bg-primary"

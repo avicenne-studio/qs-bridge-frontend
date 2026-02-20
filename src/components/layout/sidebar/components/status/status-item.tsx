@@ -4,15 +4,17 @@ interface Props {
   label: string;
   value: string;
   color?: "green" | "red" | "orange";
+  variant?: "sidebar" | "tab-bar";
 }
 
-export default function StatusItem({ label, value, color = "green" }: Props) {
+export default function StatusItem({ label, value, color = "green", variant = "sidebar" }: Props) {
   return (
     <div
-      className={cn("flex items-center justify-between rounded-lg px-3 py-2", {
-        "bg-success-100": color === "green",
-        "bg-warning-100": color === "orange",
-        "bg-error-100": color === "red",
+      className={cn("flex items-center justify-between rounded-lg", {
+        "px-3 py-2": variant === "sidebar",
+        "bg-success-100": variant === "sidebar" && color === "green",
+        "bg-warning-100": variant === "sidebar" && color === "orange",
+        "bg-error-100": variant === "sidebar" && color === "red",
       })}
     >
       <label className="text-primary text-sm">{label}</label>
