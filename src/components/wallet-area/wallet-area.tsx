@@ -2,6 +2,7 @@ import { useState } from "react";
 import WalletAreaSlot from "./wallet-area-slot";
 import SolanaIcon from "@/components/core/assets/solana-icon";
 import QubicIcon from "@/components/core/assets/qubic-icon";
+import cn from "@/utils/classnames";
 
 export default function WalletArea() {
   const [solanaConnected, setSolanaConnected] = useState(false);
@@ -26,7 +27,7 @@ export default function WalletArea() {
   const showSeparator = solanaConnected && qubicConnected;
 
   return (
-    <div className="flex w-fit bg-white shrink-0">
+    <div className={cn("w-fit bg-white shrink-0", "hidden xl:flex")}>
       <div className="flex items-center gap-4 w-fit shrink-0 h-full px-12 bg-primary rounded-bl-4xl">
         <WalletAreaSlot
           {...SOLANA_WALLET_CONFIG}

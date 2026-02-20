@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { History, Radio, SendToBack, Activity } from "lucide-react";
 import { routes } from "@/constants/routes";
 import TabBarLink from "./components/tab-bar-link";
 import StatusItem from "../sidebar/components/status/status-item";
 import cn from "@/utils/classnames";
+import { useToggleState } from "@/hooks/use-toggle-state";
 
 const navItems = [
   { path: routes.activity.path, name: routes.activity.name, Icon: Radio },
@@ -18,7 +18,7 @@ const STATUS_ITEMS = [
 ];
 
 export default function TabBar() {
-  const [isStatusPanelOpen, setIsStatusPanelOpen] = useState(false);
+  const [isStatusPanelOpen, toggleStatusPanel] = useToggleState(false);
 
   return (
     <div className={cn("fixed bottom-0 left-0 right-0 z-50", "flex xl:hidden")}>
@@ -66,7 +66,7 @@ export default function TabBar() {
       <div className="relative z-10 flex flex-row items-center justify-center rounded-t-3xl bg-highlight px-4 py-3 w-fit">
         <button
           type="button"
-          onClick={() => setIsStatusPanelOpen((open) => !open)}
+          onClick={toggleStatusPanel}
           className={cn(
             "flex z-10 w-10 shrink-0 flex-col items-center justify-center transition-colors",
             isStatusPanelOpen ? "text-primary" : "text-white",

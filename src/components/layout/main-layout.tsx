@@ -23,14 +23,13 @@ export default function MainLayout() {
       <TopBar />
       <Sidebar />
       <TabBar />
+
       <main className="size-full bg-white rounded-tl-4xl overflow-hidden pl-7 pb-20 xl:pb-0">
         <div className="flex w-full h-[90px] bg-primary rounded-tl-4xl">
           <span className="text-primary bg-white text-3xl font-semibold flex items-center pr-7 w-full rounded-tr-4xl">
             {pageName}
           </span>
-          <div className="hidden xl:block">
-            <WalletArea />
-          </div>
+          <WalletArea />
         </div>
         <Outlet />
       </main>

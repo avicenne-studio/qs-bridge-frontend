@@ -64,9 +64,9 @@ export default function TopBar() {
           <button
             type="button"
             onClick={toggleMenu}
-            className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white transition-colors"
+            className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg"
             aria-expanded={isMenuOpen}
-            aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           >
             <span
               className={cn(
@@ -77,7 +77,7 @@ export default function TopBar() {
             />
             <Wallet
               size={16}
-              strokeWidth={1.5}
+              strokeWidth={1}
               className={cn(
                 "relative z-10 transition-colors",
                 isMenuOpen ? "text-primary" : "text-white",
