@@ -29,7 +29,7 @@ export default function TopBar() {
   const [qubicConnected, setQubicConnected] = useState(false);
 
   return (
-    <div className="fixed left-0 right-0 top-0 z-40 flex xl:hidden flex-col">
+    <div className="sticky left-0 top-0 z-40 flex xl:hidden flex-col">
       <div
         className={cn(
           "absolute -z-10 left-0 right-0 top-full w-full rounded-b-3xl bg-highlight pt-12 pb-6 px-6 transition-transform duration-300 ease-out",
