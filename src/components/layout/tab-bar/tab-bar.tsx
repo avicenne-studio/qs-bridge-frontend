@@ -37,7 +37,7 @@ export default function TabBar() {
         </div>
       </div>
 
-      <div className="relative z-10 flex flex-row items-center justify-center gap-4 rounded-t-3xl bg-primary px-8 py-3 w-fit">
+      <div className="relative z-10 flex flex-row items-center justify-center gap-6 rounded-t-3xl bg-primary px-8 py-3 w-fit">
         {navItems.map(({ path, name, Icon }) => (
           <TabBarLink key={path} path={path} name={name} Icon={Icon} />
         ))}

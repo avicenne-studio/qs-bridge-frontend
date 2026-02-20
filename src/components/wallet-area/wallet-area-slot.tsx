@@ -12,6 +12,7 @@ export interface Props {
   balance: string;
   currency: string;
   isConnected: boolean;
+  variant?: "desktop" | "mobile";
   onConnect: () => void;
   onDisconnect: () => void;
 }
@@ -22,16 +23,31 @@ export default function WalletAreaSlot({
   address,
   balance,
   currency,
+  variant = "desktop",
   isConnected,
   onConnect,
   onDisconnect,
 }: Props) {
+  const isMobile = variant === "mobile";
+
   if (!isConnected) {
-    return <ConnectWalletButton label={connectWalletLabel} icon={icon} onConnect={onConnect} />;
+    return (
+      <ConnectWalletButton
+        label={connectWalletLabel}
+        icon={icon}
+        onConnect={onConnect}
+        variant={variant}
+      />
+    );
   }
 
   return (
-    <div className="flex items-center gap-4 rounded-lg py-3 px-4 text-white text-base leading-none bg-primary shrink-0">
+    <div
+      className={cn(
+        "flex items-center gap-4 rounded-lg py-3 px-4 text-base leading-none shrink-0",
+        isMobile ? "bg-transparent text-primary w-full justify-between" : "bg-primary text-white",
+      )}
+    >
       <div className="relative flex shrink-0 items-center gap-2 group">
         <div
           className={cn(
@@ -50,14 +66,28 @@ export default function WalletAreaSlot({
             "group-hover:pointer-events-auto pointer-events-none",
           )}
         >
-          <DisconnectWalletButton onDisconnect={onDisconnect} />
+          <DisconnectWalletButton onDisconnect={onDisconnect} variant={variant} />
         </div>
       </div>
 
       <span className="shrink-0 flex items-center gap-1">
-        <Coins className="size-4 text-white" aria-hidden />
-        <span className="text-base text-white leading-none font-semibold">{balance}</span>
-        <span className="text-base text-white leading-none font-semibold">{currency}</span>
+        <Coins className={cn("size-4", isMobile ? "text-primary" : "text-white")} aria-hidden />
+        <span
+          className={cn(
+            "text-base leading-none font-semibold",
+            isMobile ? "text-primary" : "text-white",
+          )}
+        >
+          {balance}
+        </span>
+        <span
+          className={cn(
+            "text-base leading-none font-semibold",
+            isMobile ? "text-primary" : "text-white",
+          )}
+        >
+          {currency}
+        </span>
       </span>
     </div>
   );
