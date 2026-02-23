@@ -9,44 +9,43 @@ import {
   useMemo,
 } from "react";
 import type SignClient from "@walletconnect/sign-client";
-import type { SessionTypes, SignClientTypes } from "@walletconnect/types";
+import type { SignClientTypes } from "@walletconnect/types";
+import { getQubicSignClient, QUBIC_CHAIN_ID, buildQubicDeepLink } from "@/lib/qubicWallet";
 import {
-  getQubicSignClient,
-  QUBIC_OPTIONAL_NAMESPACES,
-  parseQubicAccount,
-  buildQubicDeepLink,
-} from "@/lib/qubicWallet";
+  type QubicAccount,
+  type QubicSession,
+  type ConnectionMethod,
+  connectViaWalletConnect,
+  connectViaMetaMask,
+  connectViaSeed,
+  connectViaVaultFile,
+  hydrateFromWCSession,
+  requestWCAccounts,
+  disconnectWC,
+} from "@/lib/qubic";
+import { fetchIdentitySnapshot, extractBalanceAmount } from "@/lib/qubicIdentity";
 import { formatCompactNumber } from "@/utils/format";
 
-export type QubicAccount = {
-  address: string;
-  name?: string;
-  amount?: number;
-};
+export type { QubicAccount, QubicSession, ConnectionMethod };
 
-export type QubicSession = {
-  topic: string;
-  address: string;
-  chainId: string;
-  expiry?: number;
-  walletName?: string;
-  walletUrl?: string;
-  accounts?: QubicAccount[];
-};
-
-interface QubicWalletState {
+export interface QubicWalletState {
   ready: boolean;
   connected: boolean;
   connecting: boolean;
   address: string | null;
   balance: string | null;
+  method: ConnectionMethod;
   session: QubicSession | null;
   accounts: QubicAccount[];
   walletConnectUri: string | null;
   deepLink: string | null;
-  connect: () => Promise<void>;
-  disconnect: () => Promise<void>;
+  metamaskAvailable: boolean;
+  connectWalletConnect: () => Promise<void>;
   cancelPairing: () => void;
+  connectMetaMask: () => Promise<void>;
+  connectWithSeed: (seed: string) => Promise<void>;
+  connectWithVaultFile: (file: File, password: string) => Promise<void>;
+  disconnect: () => Promise<void>;
 }
 
 const QubicWalletContext = createContext<QubicWalletState | null>(null);
@@ -60,117 +59,137 @@ export function useQubicWallet() {
 const PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 if (!PROJECT_ID) throw new Error("VITE_WALLETCONNECT_PROJECT_ID is not set");
 
-const USER_DISCONNECTED = { code: 6000, message: "User disconnected" };
+const BALANCE_REFRESH_MS = 30_000;
 
-const BALANCE_REFRESH_INTERVAL_MS = 30_000;
-
-function hydrateFromSession(session: SessionTypes.Struct): QubicSession | null {
-  const namespace = session.namespaces?.qubic;
-  const primaryAccount = parseQubicAccount(namespace?.accounts?.[0] ?? "");
-  if (!namespace || !primaryAccount) return null;
-
-  return {
-    topic: session.topic,
-    address: primaryAccount.address,
-    chainId: primaryAccount.chainId,
-    expiry: typeof session.expiry === "number" ? session.expiry * 1000 : undefined,
-    walletName: session.peer.metadata?.name,
-    walletUrl: session.peer.metadata?.url,
-  };
-}
-
-async function requestAccounts(client: SignClient, topic: string): Promise<QubicAccount[]> {
-  const response = await client.request<QubicAccount[]>({
-    topic,
-    chainId: "qubic:mainnet",
-    request: { method: "qubic_requestAccounts", params: [] },
-  });
-  return Array.isArray(response) ? (response as QubicAccount[]) : [];
+function balanceFromAccounts(accounts: QubicAccount[]): string | null {
+  const amount = accounts[0]?.amount;
+  return amount != null ? formatCompactNumber(amount) : null;
 }
 
 export default function QubicWalletProvider({ children }: { children: ReactNode }) {
-  const [signClient, setSignClient] = useState<SignClient | null>(null);
   const [ready, setReady] = useState(false);
-  const [qubicSession, setQubicSession] = useState<QubicSession | null>(null);
+  const [session, setSession] = useState<QubicSession | null>(null);
+  const [accounts, setAccounts] = useState<QubicAccount[]>([]);
+  const [balance, setBalance] = useState<string | null>(null);
   const [walletConnectUri, setWalletConnectUri] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
-  const [balance, setBalance] = useState<string | null>(null);
+  const [metamaskAvailable, setMetamaskAvailable] = useState(false);
 
-  const signClientRef = useRef<SignClient | null>(null);
+  const clientRef = useRef<SignClient | null>(null);
   const sessionRef = useRef<QubicSession | null>(null);
+  sessionRef.current = session;
+
+  const method: ConnectionMethod = session
+    ? session.kind === "walletconnect"
+      ? "walletconnect"
+      : session.method
+    : null;
+
+  const applyConnect = useCallback(
+    (result: { session: QubicSession; accounts?: QubicAccount[] }) => {
+      setSession(result.session);
+      if (result.accounts?.length) {
+        setAccounts(result.accounts);
+        setBalance(balanceFromAccounts(result.accounts));
+      }
+    },
+    [],
+  );
+
+  const resetState = useCallback(() => {
+    setSession(null);
+    setAccounts([]);
+    setBalance(null);
+    setWalletConnectUri(null);
+  }, []);
 
   useEffect(() => {
-    sessionRef.current = qubicSession;
-  }, [qubicSession]);
+    setMetamaskAvailable(Boolean(window.ethereum?.request));
+  }, []);
+
+  const wcTopic = session?.kind === "walletconnect" ? session.topic : null;
+  const localAddress = session?.kind === "local" ? session.address : null;
 
   useEffect(() => {
-    if (!signClient || !qubicSession) {
-      setBalance(null);
-      return;
-    }
+    if (!wcTopic) return;
+    const client = clientRef.current;
+    if (!client) return;
 
-    const { topic } = qubicSession;
     let cancelled = false;
 
-    async function fetchBalance() {
+    async function poll() {
       try {
-        const accounts = await requestAccounts(signClient!, topic);
-        if (cancelled || accounts.length === 0) return;
-        const amount = accounts[0]?.amount;
-        setBalance(amount != null ? formatCompactNumber(amount) : null);
-        setQubicSession((prev) => (prev ? { ...prev, accounts } : prev));
-      } catch {
-        // silent — network or wallet error
+        const accs = await requestWCAccounts(client!, wcTopic!);
+        if (cancelled || !accs.length) return;
+        setAccounts(accs);
+        setBalance(balanceFromAccounts(accs));
+      } catch (err) {
+        console.error("[Qubic] WC balance poll failed:", err);
       }
     }
 
-    fetchBalance();
-    const id = setInterval(fetchBalance, BALANCE_REFRESH_INTERVAL_MS);
-
+    poll();
+    const id = setInterval(poll, BALANCE_REFRESH_MS);
     return () => {
       cancelled = true;
       clearInterval(id);
     };
-  }, [qubicSession?.topic, signClient]);
+  }, [wcTopic]);
 
   useEffect(() => {
-    let isMounted = true;
+    if (!localAddress) return;
+
+    let cancelled = false;
+
+    async function poll() {
+      try {
+        const snapshot = await fetchIdentitySnapshot(localAddress!);
+        if (cancelled) return;
+        const amount = extractBalanceAmount(snapshot);
+        if (amount != null) setBalance(formatCompactNumber(amount));
+      } catch (err) {
+        console.error("[Qubic] local balance poll failed:", err);
+      }
+    }
+
+    poll();
+    const id = setInterval(poll, BALANCE_REFRESH_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [localAddress]);
+
+  useEffect(() => {
+    let mounted = true;
     let detach: (() => void) | undefined;
 
     (async () => {
       try {
         const client = await getQubicSignClient(PROJECT_ID);
+        clientRef.current = client;
 
-        signClientRef.current = client;
-        setSignClient(client);
+        if (!mounted) return;
         setReady(true);
 
-        if (!isMounted) return;
-
-        const activeSession = [...client.session.getAll()]
+        const existing = [...client.session.getAll()]
           .reverse()
           .find((s) => Boolean(s.namespaces?.qubic));
 
-        if (activeSession) {
-          const hydrated = hydrateFromSession(activeSession);
-          if (hydrated) {
-            setQubicSession(hydrated);
-          }
+        if (existing) {
+          const hydrated = hydrateFromWCSession(existing);
+          if (hydrated) setSession(hydrated);
         }
 
-        const handleSessionDelete = ({
-          topic,
-        }: SignClientTypes.EventArguments["session_delete"]) => {
-          if (sessionRef.current?.topic === topic) {
-            setQubicSession(null);
-            setWalletConnectUri(null);
+        const onDelete = ({ topic }: SignClientTypes.EventArguments["session_delete"]) => {
+          const s = sessionRef.current;
+          if (s?.kind === "walletconnect" && s.topic === topic) {
+            resetState();
           }
         };
 
-        const handleSessionEvent = ({
-          params,
-        }: SignClientTypes.EventArguments["session_event"]) => {
-          if (params.chainId !== "qubic:mainnet") return;
+        const onEvent = ({ params }: SignClientTypes.EventArguments["session_event"]) => {
+          if (params.chainId !== QUBIC_CHAIN_ID) return;
           const { name, data } = params.event;
           if (
             name === "accountsChanged" ||
@@ -178,108 +197,107 @@ export default function QubicWalletProvider({ children }: { children: ReactNode 
             name === "assetAmountChanged"
           ) {
             if (Array.isArray(data)) {
-              const accounts = data as QubicAccount[];
-              setQubicSession((prev) => (prev ? { ...prev, accounts } : prev));
-              const amount = accounts[0]?.amount;
-              setBalance(amount != null ? formatCompactNumber(amount) : null);
+              const accs = data as QubicAccount[];
+              setAccounts(accs);
+              setBalance(balanceFromAccounts(accs));
             }
           }
         };
 
-        const handleSessionUpdate = ({
-          topic,
-        }: SignClientTypes.EventArguments["session_update"]) => {
-          const session = client.session.get(topic);
-          if (session) {
-            const hydrated = hydrateFromSession(session);
-            if (hydrated) {
-              setQubicSession((prev) => ({
-                ...hydrated,
-                accounts: prev?.accounts,
-              }));
-            }
+        const onUpdate = ({ topic }: SignClientTypes.EventArguments["session_update"]) => {
+          const s = client.session.get(topic);
+          if (s) {
+            const hydrated = hydrateFromWCSession(s);
+            if (hydrated) setSession(hydrated);
           }
         };
 
-        client.on("session_delete", handleSessionDelete);
-        client.on("session_event", handleSessionEvent);
-        client.on("session_update", handleSessionUpdate);
+        client.on("session_delete", onDelete);
+        client.on("session_event", onEvent);
+        client.on("session_update", onUpdate);
 
         detach = () => {
-          client.off("session_delete", handleSessionDelete);
-          client.off("session_event", handleSessionEvent);
-          client.off("session_update", handleSessionUpdate);
+          client.off("session_delete", onDelete);
+          client.off("session_event", onEvent);
+          client.off("session_update", onUpdate);
         };
-      } catch {
-        if (!isMounted) return;
+      } catch (err) {
+        console.error("[Qubic] SignClient init failed:", err);
       }
     })();
 
     return () => {
-      isMounted = false;
+      mounted = false;
       detach?.();
     };
   }, []);
 
-  const connect = useCallback(async () => {
-    const client = signClientRef.current;
+  const connectWalletConnect = useCallback(async () => {
+    const client = clientRef.current;
     if (!client) return;
-
     setConnecting(true);
 
     try {
-      if (sessionRef.current?.topic) {
-        try {
-          await client.disconnect({
-            topic: sessionRef.current.topic,
-            reason: USER_DISCONNECTED,
-          });
-        } catch {
-          // ignore stale session errors
-        }
-      }
-
-      const { uri, approval } = await client.connect({
-        optionalNamespaces: QUBIC_OPTIONAL_NAMESPACES,
-      });
-
-      if (uri) setWalletConnectUri(uri);
-
-      const session = await approval();
-      setWalletConnectUri(null);
-
-      const hydrated = hydrateFromSession(session);
-      if (hydrated) {
-        setQubicSession(hydrated);
-      }
-    } catch {
-      setWalletConnectUri(null);
+      const currentTopic =
+        sessionRef.current?.kind === "walletconnect" ? sessionRef.current.topic : null;
+      const result = await connectViaWalletConnect(client, currentTopic, setWalletConnectUri);
+      applyConnect(result);
+    } catch (err) {
+      console.error("[Qubic] WalletConnect pairing failed:", err);
     } finally {
+      setWalletConnectUri(null);
       setConnecting(false);
     }
-  }, []);
-
-  const disconnect = useCallback(async () => {
-    const session = sessionRef.current;
-    if (!session) return;
-
-    const client = signClientRef.current;
-    if (client) {
-      try {
-        await client.disconnect({ topic: session.topic, reason: USER_DISCONNECTED });
-      } catch {
-        // ignore
-      }
-    }
-
-    setQubicSession(null);
-    setWalletConnectUri(null);
-  }, []);
+  }, [applyConnect]);
 
   const cancelPairing = useCallback(() => {
     setWalletConnectUri(null);
     setConnecting(false);
   }, []);
+
+  const connectMetaMask = useCallback(async () => {
+    setConnecting(true);
+    try {
+      applyConnect(await connectViaMetaMask());
+    } finally {
+      setConnecting(false);
+    }
+  }, [applyConnect]);
+
+  const connectWithSeed = useCallback(
+    async (seed: string) => {
+      setConnecting(true);
+      try {
+        applyConnect(await connectViaSeed(seed));
+      } finally {
+        setConnecting(false);
+      }
+    },
+    [applyConnect],
+  );
+
+  const connectWithVaultFile = useCallback(
+    async (file: File, password: string) => {
+      setConnecting(true);
+      try {
+        applyConnect(await connectViaVaultFile(file, password));
+      } finally {
+        setConnecting(false);
+      }
+    },
+    [applyConnect],
+  );
+
+  const disconnect = useCallback(async () => {
+    try {
+      const s = sessionRef.current;
+      if (s?.kind === "walletconnect" && clientRef.current) {
+        await disconnectWC(clientRef.current, s.topic).catch(() => {});
+      }
+    } finally {
+      resetState();
+    }
+  }, [resetState]);
 
   const deepLink = useMemo(
     () => (walletConnectUri ? buildQubicDeepLink(walletConnectUri) : null),
@@ -289,28 +307,39 @@ export default function QubicWalletProvider({ children }: { children: ReactNode 
   const value = useMemo<QubicWalletState>(
     () => ({
       ready,
-      connected: !!qubicSession?.address,
+      connected: !!session?.address,
       connecting,
-      address: qubicSession?.address ?? null,
+      address: session?.address ?? null,
       balance,
-      session: qubicSession,
-      accounts: qubicSession?.accounts ?? [],
+      method,
+      session,
+      accounts,
       walletConnectUri,
       deepLink,
-      connect,
-      disconnect,
+      metamaskAvailable,
+      connectWalletConnect,
       cancelPairing,
+      connectMetaMask,
+      connectWithSeed,
+      connectWithVaultFile,
+      disconnect,
     }),
     [
       ready,
-      qubicSession,
+      session,
       connecting,
       balance,
+      method,
+      accounts,
       walletConnectUri,
       deepLink,
-      connect,
-      disconnect,
+      metamaskAvailable,
+      connectWalletConnect,
       cancelPairing,
+      connectMetaMask,
+      connectWithSeed,
+      connectWithVaultFile,
+      disconnect,
     ],
   );
 

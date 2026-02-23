@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect } from "react";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import cn from "@/utils/classnames";
 
 interface Props {
@@ -7,17 +7,21 @@ interface Props {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  backButton?: () => void;
 }
 
-export default function WalletModal({ open, onClose, title, children }: Props) {
+export default function WalletModal({ open, onClose, title, children, backButton }: Props) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (backButton) backButton();
+        else onClose();
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  }, [open, onClose, backButton]);
 
   if (!open) return null;
 
@@ -38,11 +42,20 @@ export default function WalletModal({ open, onClose, title, children }: Props) {
         aria-modal="true"
         aria-label={title}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-white">{title}</h2>
+        <div className="flex items-center gap-2 mb-6">
+          {backButton && (
+            <button
+              onClick={backButton}
+              className="rounded-lg p-1.5 text-white/50 hover:text-white hover:bg-white/10 transition-colors -ml-1"
+              aria-label="Back"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          )}
+          <h2 className="text-lg font-semibold text-white flex-1">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            className="rounded-lg p-1.5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
             aria-label="Close"
           >
             <X size={18} />

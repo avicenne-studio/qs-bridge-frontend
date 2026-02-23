@@ -1,6 +1,8 @@
 import SignClient from "@walletconnect/sign-client";
 import type { ProposalTypes, SignClientTypes } from "@walletconnect/types";
 
+export const QUBIC_CHAIN_ID = `qubic:${import.meta.env.VITE_QUBIC_NETWORK ?? "testnet"}` as const;
+
 const QUBIC_METHODS = [
   "qubic_requestAccounts",
   "qubic_sendQubic",
@@ -14,7 +16,7 @@ const QUBIC_EVENTS = ["accountsChanged", "amountChanged", "assetAmountChanged"] 
 
 export const QUBIC_OPTIONAL_NAMESPACES: ProposalTypes.OptionalNamespaces = {
   qubic: {
-    chains: ["qubic:mainnet"],
+    chains: [QUBIC_CHAIN_ID],
     methods: [...QUBIC_METHODS],
     events: [...QUBIC_EVENTS],
   },
