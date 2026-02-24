@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function Button({
-  variant = "default",
+  variant,
   size = "regular",
   label,
   icon,

@@ -4,16 +4,11 @@ import Button from "@/components/core/buttons/button/button";
 interface Props {
   label: string;
   icon: ReactNode;
+  variant: "desktop" | "mobile";
   onConnect: () => void;
-  variant?: "desktop" | "mobile";
 }
 
-export default function ConnectWalletButton({
-  label,
-  icon,
-  onConnect,
-  variant = "desktop",
-}: Props) {
+export default function ConnectWalletButton({ label, icon, variant, onConnect }: Props) {
   return (
     <Button
       variant={variant === "mobile" ? "outline" : "default"}

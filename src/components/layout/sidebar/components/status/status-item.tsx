@@ -4,10 +4,10 @@ interface Props {
   label: string;
   value: string;
   color?: "green" | "red" | "orange";
-  variant?: "sidebar" | "tab-bar";
+  variant: "sidebar" | "tab-bar";
 }
 
-export default function StatusItem({ label, value, color = "green", variant = "sidebar" }: Props) {
+export default function StatusItem({ label, value, color = "green", variant }: Props) {
   return (
     <div
       className={cn("flex items-center justify-between rounded-lg", {

@@ -3,10 +3,10 @@ import Button from "@/components/core/buttons/button/button";
 
 interface Props {
   onDisconnect: () => void;
-  variant?: "desktop" | "mobile";
+  variant: "desktop" | "mobile";
 }
 
-export default function DisconnectWalletButton({ onDisconnect, variant = "desktop" }: Props) {
+export default function DisconnectWalletButton({ variant, onDisconnect }: Props) {
   return (
     <Button
       size="small"

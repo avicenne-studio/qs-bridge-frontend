@@ -12,7 +12,7 @@ export interface Props {
   balance: string;
   currency: string;
   isConnected: boolean;
-  variant?: "desktop" | "mobile";
+  variant: "desktop" | "mobile";
   onConnect: () => void;
   onDisconnect: () => void;
 }
@@ -23,7 +23,7 @@ export default function WalletAreaSlot({
   address,
   balance,
   currency,
-  variant = "desktop",
+  variant,
   isConnected,
   onConnect,
   onDisconnect,
