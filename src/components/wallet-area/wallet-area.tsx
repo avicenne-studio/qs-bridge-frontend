@@ -37,6 +37,7 @@ export default function WalletArea() {
         <div className={cn("items-center gap-4 w-fit shrink-0 h-full", "hidden xl:flex")}>
           <WalletAreaSlot
             {...SOLANA_WALLET_CONFIG}
+            variant="desktop"
             isConnected={solanaConnected}
             onConnect={() => setSolanaConnected(true)}
             onDisconnect={() => setSolanaConnected(false)}
@@ -48,6 +49,7 @@ export default function WalletArea() {
 
           <WalletAreaSlot
             {...QUBIC_WALLET_CONFIG}
+            variant="desktop"
             isConnected={qubicConnected}
             onConnect={() => setQubicConnected(true)}
             onDisconnect={() => setQubicConnected(false)}
