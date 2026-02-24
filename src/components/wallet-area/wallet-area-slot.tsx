@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState, useCallback } from "react";
 import { Coins } from "lucide-react";
 import type { Address } from "viem";
 import { truncateAddress } from "@/utils/address";
@@ -30,6 +30,11 @@ export default function WalletAreaSlot({
   onDisconnect,
 }: Props) {
   const isMobile = variant === "mobile";
+  const [showDisconnect, setShowDisconnect] = useState(false);
+
+  const handleTap = useCallback(() => {
+    if (isMobile) setShowDisconnect((prev) => !prev);
+  }, [isMobile]);
 
   if (!isConnected) {
     return (
@@ -38,17 +43,46 @@ export default function WalletAreaSlot({
         icon={icon}
         onConnect={onConnect}
         variant={variant}
+        isFullWidth={isMobile}
       />
     );
   }
 
+  if (isMobile) {
+    return (
+      <div className="flex flex-col w-full">
+        <button
+          type="button"
+          onClick={handleTap}
+          className={cn(
+            "flex items-center justify-between gap-4 rounded-lg py-3 px-4",
+            "text-sm leading-none text-primary w-full active:bg-primary/5 transition-colors cursor-pointer",
+          )}
+        >
+          <span className="flex items-center gap-2">
+            {icon}
+            <span className="truncate">{truncateAddress(address)}</span>
+          </span>
+          <span className="shrink-0 flex items-center gap-1">
+            <Coins className="size-4 text-primary" aria-hidden />
+            <span className="font-semibold">{balance}</span>
+            <span className="font-semibold">{currency}</span>
+          </span>
+        </button>
+        <div
+          className={cn(
+            "overflow-hidden transition-all duration-200 ease-out px-4",
+            showDisconnect ? "max-h-12 opacity-100 pb-2" : "max-h-0 opacity-0",
+          )}
+        >
+          <DisconnectWalletButton onDisconnect={onDisconnect} variant={variant} isFullWidth />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={cn(
-        "flex items-center gap-4 rounded-lg py-3 px-4 text-base leading-none shrink-0",
-        isMobile ? "bg-transparent text-primary w-full justify-between" : "bg-primary text-white",
-      )}
-    >
+    <div className="flex items-center gap-4 rounded-lg py-3 px-4 text-base leading-none shrink-0 bg-primary text-white">
       <div className="relative flex shrink-0 items-center gap-2 group">
         <div
           className={cn(
@@ -72,23 +106,9 @@ export default function WalletAreaSlot({
       </div>
 
       <span className="shrink-0 flex items-center gap-1">
-        <Coins className={cn("size-4", isMobile ? "text-primary" : "text-white")} aria-hidden />
-        <span
-          className={cn(
-            "text-base leading-none font-semibold",
-            isMobile ? "text-primary" : "text-white",
-          )}
-        >
-          {balance}
-        </span>
-        <span
-          className={cn(
-            "text-base leading-none font-semibold",
-            isMobile ? "text-primary" : "text-white",
-          )}
-        >
-          {currency}
-        </span>
+        <Coins className="size-4 text-white" aria-hidden />
+        <span className="text-base leading-none font-semibold text-white">{balance}</span>
+        <span className="text-base leading-none font-semibold text-white">{currency}</span>
       </span>
     </div>
   );

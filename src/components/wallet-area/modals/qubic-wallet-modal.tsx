@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowLeft, KeyRound, QrCode, UploadCloud, Wallet } from "lucide-react";
 import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import cn from "@/utils/classnames";
@@ -28,6 +28,7 @@ export default function QubicWalletModal({ open, onClose }: Props) {
   const qubic = useQubicWallet();
   const [page, setPage] = useState<Method | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const closingRef = useRef(false);
 
   const methods: MethodDef[] = [
     {
@@ -62,19 +63,24 @@ export default function QubicWalletModal({ open, onClose }: Props) {
 
   useEffect(() => {
     if (open) {
+      closingRef.current = false;
       setPage(null);
       setError(null);
     }
   }, [open]);
 
   useEffect(() => {
-    if (qubic.connected && open) onClose();
-  }, [qubic.connected, open, onClose]);
+    if (qubic.connected && open) handleClose();
+  }, [qubic.connected, open]);
 
-  function handleClose() {
-    if (qubic.walletConnectUri && !qubic.connected) qubic.cancelPairing();
+  const handleClose = useCallback(() => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    if (page === "walletconnect" && qubic.walletConnectUri && !qubic.connected) {
+      qubic.cancelPairing();
+    }
     onClose();
-  }
+  }, [page, qubic.walletConnectUri, qubic.connected, qubic.cancelPairing, onClose]);
 
   function goBack() {
     if (page === "walletconnect" && qubic.walletConnectUri && !qubic.connected) {
@@ -126,7 +132,7 @@ function MethodList({
             "border border-transparent transition-all duration-150",
             m.disabled
               ? "bg-white/3 cursor-not-allowed"
-              : "bg-white/5 hover:bg-white/8 hover:border-white/10",
+              : "bg-white/5 hover:bg-white/8 hover:border-white/10 cursor-pointer",
           )}
         >
           <span

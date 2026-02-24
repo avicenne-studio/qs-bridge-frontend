@@ -56,7 +56,7 @@ export default function SeedPage({ qubic, onError }: Props) {
       <div className="flex gap-2">
         <button
           onClick={() => setVisible((v) => !v)}
-          className="flex-1 rounded-xl border border-white/10 px-3 py-2.5 text-xs text-white/50 hover:text-white hover:border-white/20 transition-colors"
+          className="flex-1 rounded-xl border border-white/10 px-3 py-2.5 text-xs text-white/50 hover:text-white hover:border-white/20 transition-colors cursor-pointer"
         >
           {visible ? "Hide" : "Reveal"}
         </button>
@@ -65,7 +65,7 @@ export default function SeedPage({ qubic, onError }: Props) {
           disabled={!seed.trim() || qubic.connecting}
           className={cn(
             "flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5",
-            "text-sm font-semibold bg-highlight text-primary hover:bg-highlight/90 transition-colors",
+            "text-sm font-semibold bg-highlight text-primary hover:bg-highlight/90 transition-colors cursor-pointer",
             "disabled:opacity-50 disabled:pointer-events-none",
           )}
         >

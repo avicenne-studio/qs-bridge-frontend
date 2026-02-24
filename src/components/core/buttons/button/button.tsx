@@ -26,7 +26,7 @@ export default function Button({
   action,
 }: Props) {
   const buttonClasses = cn(
-    "flex items-center justify-center text-primary !leading-none",
+    "flex items-center justify-center text-primary !leading-none cursor-pointer",
     isFullWidth ? "w-full" : "w-fit",
     size === "regular" && "gap-2 rounded-lg py-3 px-4 text-base",
     size === "small" && "gap-2 rounded py-1 px-2 text-sm",

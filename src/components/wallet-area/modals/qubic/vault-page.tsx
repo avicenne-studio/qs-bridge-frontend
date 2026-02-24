@@ -100,7 +100,7 @@ export default function VaultPage({ qubic, onError }: Props) {
                 setFile(null);
                 setPassword("");
               }}
-              className="text-xs text-white/35 hover:text-white/70 transition-colors ml-3 shrink-0"
+              className="text-xs text-white/35 hover:text-white/70 transition-colors ml-3 shrink-0 cursor-pointer"
             >
               Remove
             </button>
@@ -123,7 +123,7 @@ export default function VaultPage({ qubic, onError }: Props) {
             disabled={!password.trim() || qubic.connecting}
             className={cn(
               "flex items-center justify-center gap-2 w-full rounded-xl px-4 py-2.5",
-              "text-sm font-semibold bg-highlight text-primary hover:bg-highlight/90 transition-colors",
+              "text-sm font-semibold bg-highlight text-primary hover:bg-highlight/90 transition-colors cursor-pointer",
               "disabled:opacity-50 disabled:pointer-events-none",
             )}
           >

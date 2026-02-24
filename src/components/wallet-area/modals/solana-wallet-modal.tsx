@@ -85,7 +85,7 @@ export default function SolanaWalletModal({ open, onClose }: Props) {
                     onClick={() => handleSelect(w.adapter.name, w.adapter.icon)}
                     className={cn(
                       "group flex items-center gap-3.5 w-full rounded-xl px-4 py-3.5 text-left",
-                      "border border-transparent bg-white/5 hover:bg-white/8 hover:border-white/10 transition-all duration-150",
+                      "border border-transparent bg-white/5 hover:bg-white/8 hover:border-white/10 transition-all duration-150 cursor-pointer",
                     )}
                   >
                     <img
@@ -120,7 +120,7 @@ export default function SolanaWalletModal({ open, onClose }: Props) {
                     onClick={() => window.open(w.adapter.url, "_blank")}
                     className={cn(
                       "group flex items-center gap-3.5 w-full rounded-xl px-4 py-3.5 text-left",
-                      "border border-transparent bg-white/5 hover:bg-white/8 hover:border-white/10 transition-all duration-150",
+                      "border border-transparent bg-white/5 hover:bg-white/8 hover:border-white/10 transition-all duration-150 cursor-pointer",
                     )}
                   >
                     <img

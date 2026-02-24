@@ -27,7 +27,7 @@ export default function MetaMaskPage({ qubic, onError }: Props) {
         disabled={qubic.connecting}
         className={cn(
           "flex items-center justify-center gap-2 w-full rounded-xl px-4 py-2.5",
-          "text-sm font-semibold bg-highlight text-primary transition-colors hover:bg-highlight/90",
+          "text-sm font-semibold bg-highlight text-primary transition-colors hover:bg-highlight/90 cursor-pointer",
           "disabled:opacity-50 disabled:pointer-events-none",
         )}
       >
