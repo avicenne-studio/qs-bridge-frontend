@@ -3,7 +3,7 @@ import { routes } from "@/constants/routes";
 import TabBarLink from "./components/tab-bar-link";
 import StatusItem from "../sidebar/components/status/status-item";
 import cn from "@/utils/classnames";
-import { useToggleState } from "@/hooks/use-toggle-state";
+import { useToggle } from "@/hooks/use-toggle";
 
 const navItems = [
   { path: routes.activity.path, name: routes.activity.name, Icon: Radio },
@@ -11,6 +11,7 @@ const navItems = [
   { path: routes.history.path, name: routes.history.name, Icon: History },
 ];
 
+//Todo: get status from backend
 const STATUS_ITEMS = [
   { label: "Qubic → Solana", value: "Operational" },
   { label: "Solana → Qubic", value: "Operational" },
@@ -18,7 +19,7 @@ const STATUS_ITEMS = [
 ];
 
 export default function TabBar() {
-  const [isStatusPanelOpen, toggleStatusPanel] = useToggleState(false);
+  const [isStatusPanelOpen, toggleStatusPanel] = useToggle(false);
 
   return (
     <div className={cn("fixed bottom-0 left-0 right-0 z-50", "flex xl:hidden")}>

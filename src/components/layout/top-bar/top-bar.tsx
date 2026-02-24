@@ -4,7 +4,7 @@ import QubicBridgeLogomark from "@/components/core/assets/qubic-bridge-logomark"
 import WalletAreaSlot from "@/components/wallet-area/wallet-area-slot";
 import SolanaIcon from "@/components/core/assets/solana-icon";
 import QubicIcon from "@/components/core/assets/qubic-icon";
-import { useToggleState } from "@/hooks/use-toggle-state";
+import { useToggle } from "@/hooks/use-toggle";
 import cn from "@/utils/classnames";
 
 const SOLANA_WALLET_CONFIG = {
@@ -24,7 +24,7 @@ const QUBIC_WALLET_CONFIG = {
 } as const;
 
 export default function TopBar() {
-  const [isMenuOpen, toggleMenu] = useToggleState(false);
+  const [isMenuOpen, toggleMenu] = useToggle(false);
   const [solanaConnected, setSolanaConnected] = useState(false);
   const [qubicConnected, setQubicConnected] = useState(false);
 
