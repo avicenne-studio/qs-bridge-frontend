@@ -35,7 +35,7 @@ export default function TopBar() {
             icon={<SolanaIcon />}
             address={solana.address ?? ""}
             balance={solana.balance ?? "---"}
-            currency="SOL"
+            currency="wQUBIC"
             variant="mobile"
             isConnected={solana.connected}
             onConnect={() => setSolanaModalOpen(true)}

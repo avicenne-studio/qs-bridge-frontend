@@ -27,7 +27,8 @@ export default function WalletArea() {
             icon={<SolanaIcon />}
             address={solana.address ?? ""}
             balance={solana.balance ?? "—"}
-            currency="SOL"
+            currency="wQUBIC"
+            variant="desktop"
             isConnected={solana.connected}
             onConnect={() => setSolanaModalOpen(true)}
             onDisconnect={() => solana.disconnect()}

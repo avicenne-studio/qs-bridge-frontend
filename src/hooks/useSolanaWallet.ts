@@ -1,8 +1,11 @@
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { formatCompactNumber } from "@/utils/format";
 
 const BALANCE_REFRESH_INTERVAL_MS = 30_000;
+const WQUBIC_MINT = new PublicKey(import.meta.env.VITE_WQUBIC_MINT as string);
+const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
 export default function useSolanaWallet() {
   const { wallets, select, disconnect, connected, connecting, publicKey, wallet } = useWallet();
@@ -19,12 +22,15 @@ export default function useSolanaWallet() {
 
     async function fetchBalance() {
       try {
-        const lamports = await connection.getBalance(publicKey!);
-        if (!cancelled) {
-          setBalance((Math.floor((lamports / LAMPORTS_PER_SOL) * 100) / 100).toFixed(2));
-        }
+        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(publicKey!, {
+          mint: WQUBIC_MINT,
+          programId: TOKEN_PROGRAM_ID,
+        });
+        if (cancelled) return;
+        const amount = tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount ?? 0;
+        setBalance(formatCompactNumber(Math.floor(amount)));
       } catch (err) {
-        console.error("[Solana] getBalance failed:", err);
+        console.error("[Solana] wQubic balance fetch failed:", err);
       }
     }
 
