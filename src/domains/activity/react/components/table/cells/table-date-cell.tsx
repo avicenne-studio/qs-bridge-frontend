@@ -5,11 +5,9 @@ interface Props {
   date: string;
 }
 
-const DATE_DISPLAY_FORMAT = "dd/MM/yy";
-
 export default function TableDateCell({ date }: Props) {
   const parsed = parseISO(date);
-  const formatted = format(parsed, DATE_DISPLAY_FORMAT);
+  const formatted = format(parsed, "dd/MM/yy");
 
   return <CellLayout type="td">{formatted}</CellLayout>;
 }

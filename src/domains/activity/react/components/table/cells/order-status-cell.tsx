@@ -25,18 +25,16 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> =
   },
 };
 
-interface OrderStatusCellProps {
+interface Props {
   status: OrderStatus;
 }
 
-export default function OrderStatusCell({ status }: OrderStatusCellProps) {
+export default function OrderStatusCell({ status }: Props) {
   const { label, className } = STATUS_CONFIG[status];
 
   return (
     <CellLayout type="td">
-      <span className={cn("text-xs font-normal py-[2px] px-1.5 rounded-md", className)}>
-        {label}
-      </span>
+      <span className={cn("text-xs font-normal py-0.5 px-1.5 rounded-md", className)}>{label}</span>
     </CellLayout>
   );
 }

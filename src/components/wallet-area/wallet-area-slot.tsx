@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { Coins } from "lucide-react";
+import type { Address } from "viem";
 import { truncateAddress } from "@/utils/address";
 import cn from "@/utils/classnames";
 import ConnectWalletButton from "./connect-wallet-button/connect-wallet-button";
@@ -8,7 +9,7 @@ import DisconnectWalletButton from "./disconnect-wallet-button/disconnect-wallet
 export interface Props {
   connectWalletLabel: string;
   icon: ReactNode;
-  address: string;
+  address: Address;
   balance: string;
   currency: string;
   isConnected: boolean;

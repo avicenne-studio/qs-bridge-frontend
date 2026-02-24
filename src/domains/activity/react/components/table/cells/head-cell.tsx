@@ -1,27 +1,34 @@
 import cn from "@/utils/classnames";
 import { ArrowUpDown } from "lucide-react";
 import type { MouseEvent, PropsWithChildren } from "react";
+import type { SortDirection } from "@tanstack/react-table";
 import CellLayout from "./cell-layout";
 
 interface Props extends PropsWithChildren {
   canSort?: boolean;
-  isSorted?: false | "asc" | "desc";
+  sortDirection?: SortDirection;
   title?: string;
-  onSort?: (event: MouseEvent) => void;
+  onSort?: (event: unknown) => void;
 }
 
-const sortDataAttr = (isSorted: false | "asc" | "desc" | undefined) =>
-  isSorted === "asc" || isSorted === "desc" ? isSorted : "none";
+export default function HeadCell({
+  canSort = true,
+  sortDirection,
+  title,
+  children,
+  onSort,
+}: Props) {
+  const sort = sortDirection ? sortDirection : "none";
 
-export default function HeadCell({ children, canSort = true, isSorted, title, onSort }: Props) {
+  function handleSort(e: MouseEvent<HTMLButtonElement>) {
+    if (canSort) onSort?.(e);
+  }
+
   return (
     <CellLayout type="th">
       <button
         type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          if (canSort) onSort?.(e);
-        }}
+        onClick={handleSort}
         aria-label={title}
         className={cn(
           "flex flex-row items-center gap-[6px] border-none bg-transparent p-0 text-left",
@@ -29,7 +36,7 @@ export default function HeadCell({ children, canSort = true, isSorted, title, on
         )}
       >
         <span className="text-primary text-sm font-normal">{children}</span>
-        <span className="inline-flex shrink-0" data-sort={sortDataAttr(isSorted)} aria-hidden>
+        <span className="inline-flex shrink-0" data-sort={sort} aria-hidden>
           <ArrowUpDown size={12} strokeWidth={1} />
         </span>
       </button>

@@ -17,6 +17,7 @@ import PaginationButton from "./pagination-button";
 import type { ActivityRow } from "@/domains/activity/activity.types";
 import { MOCKED_TABLE_DATA } from "@/domains/activity/activity.constants";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { getHeadCellSortDirection, getHeadCellSortTitle } from "./table.utils";
 
 const PAGE_SIZE = 5;
 
@@ -66,6 +67,7 @@ export default function ActivityTable() {
     data: MOCKED_TABLE_DATA,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    // Todo: when sorting via backend, remove getSortedRowModel()
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageIndex: 0, pageSize: PAGE_SIZE } },
@@ -76,7 +78,14 @@ export default function ActivityTable() {
   return (
     <>
       <section className="w-full overflow-x-auto">
-        <table className="w-full min-w-[600px] border-collapse">
+        <table className="w-full min-w-[600px] table-fixed border-collapse">
+          {/* colgroup: set column widths */}
+          <colgroup>
+            {columns.map((_, i) => (
+              <col key={i} style={{ width: `${100 / columns.length}%` }} />
+            ))}
+          </colgroup>
+
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -85,17 +94,9 @@ export default function ActivityTable() {
                     <HeadCell
                       key={header.id}
                       canSort={header.column.getCanSort()}
-                      isSorted={header.column.getIsSorted()}
+                      sortDirection={getHeadCellSortDirection(header)}
                       onSort={header.column.getToggleSortingHandler()}
-                      title={
-                        header.column.getCanSort()
-                          ? header.column.getNextSortingOrder() === "asc"
-                            ? "Sort by ascending order"
-                            : header.column.getNextSortingOrder() === "desc"
-                              ? "Sort by descending order"
-                              : "Cancel sorting"
-                          : undefined
-                      }
+                      title={getHeadCellSortTitle(header)}
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
                     </HeadCell>
@@ -104,6 +105,7 @@ export default function ActivityTable() {
               </tr>
             ))}
           </thead>
+
           <tbody>
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id} className="odd:bg-[#F5FBFB] rounded-lg overflow-hidden">

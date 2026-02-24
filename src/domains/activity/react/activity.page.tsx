@@ -3,6 +3,7 @@ import ActivityTable from "@/domains/activity/react/components/table/activity-ta
 import { Lock, Network } from "lucide-react";
 
 export default function ActivityPage() {
+  //Todo: get stats from backend
   const stats = [
     { title: "Total orders", value: "123", Icon: Network },
     { title: "Total locked", value: "123", currency: "QUBIC", Icon: Lock },

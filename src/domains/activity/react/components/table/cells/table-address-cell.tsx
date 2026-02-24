@@ -1,9 +1,10 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
+import type { Address } from "viem";
 import { truncateAddress } from "@/utils/address";
 import CellLayout from "./cell-layout";
 
 interface Props {
-  address: string;
+  address: Address;
 }
 
 export default function TableAddressCell({ address }: Props) {
