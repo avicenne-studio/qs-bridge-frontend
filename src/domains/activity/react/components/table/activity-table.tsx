@@ -1,6 +1,7 @@
 import {
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
@@ -12,8 +13,12 @@ import OrderStatusCell from "./cells/order-status-cell";
 import TableAddressCell from "./cells/table-address-cell";
 import TableDateCell from "./cells/table-date-cell";
 import BasicCell from "./cells/basic-cell";
+import PaginationButton from "./pagination-button";
 import type { ActivityRow } from "@/domains/activity/activity.types";
 import { MOCKED_TABLE_DATA } from "@/domains/activity/activity.constants";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+
+const PAGE_SIZE = 5;
 
 const columns: ColumnDef<ActivityRow>[] = [
   {
@@ -62,50 +67,86 @@ export default function ActivityTable() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageIndex: 0, pageSize: PAGE_SIZE } },
     state: { sorting },
     onSortingChange: setSorting,
   });
 
   return (
-    <section className="mt-8 w-full overflow-x-auto">
-      <table className="w-full min-w-[600px] border-collapse">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) =>
-                header.isPlaceholder ? null : (
-                  <HeadCell
-                    key={header.id}
-                    canSort={header.column.getCanSort()}
-                    isSorted={header.column.getIsSorted()}
-                    onSort={header.column.getToggleSortingHandler()}
-                    title={
-                      header.column.getCanSort()
-                        ? header.column.getNextSortingOrder() === "asc"
-                          ? "Sort by ascending order"
-                          : header.column.getNextSortingOrder() === "desc"
-                            ? "Sort by descending order"
-                            : "Cancel sorting"
-                        : undefined
-                    }
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </HeadCell>
-                ),
-              )}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="odd:bg-[#F5FBFB] rounded-lg overflow-hidden">
-              {row
-                .getVisibleCells()
-                .map((cell) => flexRender(cell.column.columnDef.cell, cell.getContext()))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
+    <>
+      <section className="w-full overflow-x-auto">
+        <table className="w-full min-w-[600px] border-collapse">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) =>
+                  header.isPlaceholder ? null : (
+                    <HeadCell
+                      key={header.id}
+                      canSort={header.column.getCanSort()}
+                      isSorted={header.column.getIsSorted()}
+                      onSort={header.column.getToggleSortingHandler()}
+                      title={
+                        header.column.getCanSort()
+                          ? header.column.getNextSortingOrder() === "asc"
+                            ? "Sort by ascending order"
+                            : header.column.getNextSortingOrder() === "desc"
+                              ? "Sort by descending order"
+                              : "Cancel sorting"
+                          : undefined
+                      }
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </HeadCell>
+                  ),
+                )}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id} className="odd:bg-[#F5FBFB] rounded-lg overflow-hidden">
+                {row
+                  .getVisibleCells()
+                  .map((cell) => flexRender(cell.column.columnDef.cell, cell.getContext()))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <div className="flex w-full py-4 justify-center items-center gap-4">
+        <div className="flex items-center gap-2">
+          <PaginationButton
+            action={() => table.setPageIndex(0)}
+            disabled={table.getState().pagination.pageIndex === 0}
+            Icon={ChevronsLeft}
+          />
+          <PaginationButton
+            action={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            Icon={ChevronLeft}
+          />
+        </div>
+
+        <span className="text-xs font-medium text-primary">
+          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+        </span>
+
+        <div className="flex items-center gap-2">
+          <PaginationButton
+            action={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            Icon={ChevronRight}
+          />
+          <PaginationButton
+            action={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={table.getState().pagination.pageIndex === table.getPageCount() - 1}
+            Icon={ChevronsRight}
+          />
+        </div>
+      </div>
+    </>
   );
 }

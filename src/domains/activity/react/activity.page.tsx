@@ -9,7 +9,7 @@ export default function ActivityPage() {
   ];
 
   return (
-    <div className="w-full pt-6">
+    <div className="w-full pt-6 flex gap-10 flex-col">
       <section className="grid w-full grid-cols-4 gap-3">
         {stats.map((stat) => (
           <ComboTextStats
