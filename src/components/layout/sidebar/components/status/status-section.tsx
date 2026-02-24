@@ -13,7 +13,7 @@ export default function StatusSection() {
       <h2 className="text-primary text-xs font-bold uppercase tracking-wide mb-3">Status</h2>
       <div className="flex flex-col gap-2">
         {STATUS_ITEMS.map(({ label, value }) => (
-          <StatusItem key={label} label={label} value={value} />
+          <StatusItem key={label} label={label} value={value} variant="sidebar" />
         ))}
       </div>
     </section>

@@ -3,13 +3,14 @@ import Button from "@/components/core/buttons/button/button";
 
 interface Props {
   onDisconnect: () => void;
+  variant: "desktop" | "mobile";
 }
 
-export default function DisconnectWalletButton({ onDisconnect }: Props) {
+export default function DisconnectWalletButton({ variant, onDisconnect }: Props) {
   return (
     <Button
       size="small"
-      variant="default"
+      variant={variant === "mobile" ? "outline" : "default"}
       label="Disconnect"
       icon={<Unlink size={14} />}
       action={onDisconnect}

@@ -1,7 +1,10 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { routes } from "@/constants/routes";
 import Sidebar from "./sidebar/sidebar";
+import TabBar from "./tab-bar/tab-bar";
+import TopBar from "./top-bar/top-bar";
 import WalletArea from "../wallet-area/wallet-area";
+import cn from "@/utils/classnames";
 
 export default function MainLayout() {
   const { pathname } = useLocation();
@@ -10,16 +13,42 @@ export default function MainLayout() {
   const pageName = routeEntries.find((r) => r.path === pathname)?.name ?? "n/a";
 
   return (
-    <div className="flex w-screen pt-4 h-dvh overflow-hidden bg-primary">
+    <div
+      className={cn(
+        "flex w-screen h-dvh relative flex-col overflow-auto",
+        "bg-primary xl:bg-primary",
+        "xl:pt-4",
+      )}
+    >
+      <TopBar />
       <Sidebar />
-      <main className="size-full bg-white rounded-tl-4xl overflow-hidden pl-7">
-        <div className="flex w-full h-[90px] bg-primary rounded-tl-4xl">
-          <span className="text-primary bg-white text-3xl font-semibold flex items-center pr-7 w-full rounded-tr-4xl">
+      <TabBar />
+
+      <main
+        className={cn(
+          "size-full bg-white overflow-hidden pl-7",
+          "pb-20 xl:pb-0",
+          "rounded-tl-2xl xl:rounded-tl-4xl",
+          "mt-8",
+        )}
+      >
+        <div className={cn("flex w-full bg-primary rounded-tl-4xl", "h-[50px] xl:h-[90px]")}>
+          <span
+            className={cn(
+              "text-primary bg-white font-semibold flex items-center pr-7 uppercase",
+              "w-fit xl:w-full",
+              "text-base xl:text-3xl",
+              "rounded-tr-2xl xl:rounded-tr-4xl",
+            )}
+          >
             {pageName}
           </span>
           <WalletArea />
         </div>
-        <Outlet />
+
+        <div className="size-full overflow-auto">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

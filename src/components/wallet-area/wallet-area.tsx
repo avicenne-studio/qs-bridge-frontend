@@ -2,6 +2,7 @@ import { useState } from "react";
 import WalletAreaSlot from "./wallet-area-slot";
 import SolanaIcon from "@/components/core/assets/solana-icon";
 import QubicIcon from "@/components/core/assets/qubic-icon";
+import cn from "@/utils/classnames";
 
 export default function WalletArea() {
   const [solanaConnected, setSolanaConnected] = useState(false);
@@ -26,25 +27,34 @@ export default function WalletArea() {
   const showSeparator = solanaConnected && qubicConnected;
 
   return (
-    <div className="flex w-fit bg-white shrink-0">
-      <div className="flex items-center gap-4 w-fit shrink-0 h-full px-12 bg-primary rounded-bl-4xl">
-        <WalletAreaSlot
-          {...SOLANA_WALLET_CONFIG}
-          isConnected={solanaConnected}
-          onConnect={() => setSolanaConnected(true)}
-          onDisconnect={() => setSolanaConnected(false)}
-        />
-
-        {showSeparator && (
-          <div className="w-px h-8 mx-2 shrink-0 bg-white" role="presentation" aria-hidden />
+    <div className="w-fit bg-white shrink-0">
+      <div
+        className={cn(
+          "items-center gap-4 w-fit shrink-0 h-full px-12 bg-primary",
+          "rounded-bl-3xl xl:rounded-bl-4xl",
         )}
+      >
+        <div className={cn("items-center gap-4 w-fit shrink-0 h-full", "hidden xl:flex")}>
+          <WalletAreaSlot
+            {...SOLANA_WALLET_CONFIG}
+            variant="desktop"
+            isConnected={solanaConnected}
+            onConnect={() => setSolanaConnected(true)}
+            onDisconnect={() => setSolanaConnected(false)}
+          />
 
-        <WalletAreaSlot
-          {...QUBIC_WALLET_CONFIG}
-          isConnected={qubicConnected}
-          onConnect={() => setQubicConnected(true)}
-          onDisconnect={() => setQubicConnected(false)}
-        />
+          {showSeparator && (
+            <div className="w-px h-8 mx-2 shrink-0 bg-white" role="presentation" aria-hidden />
+          )}
+
+          <WalletAreaSlot
+            {...QUBIC_WALLET_CONFIG}
+            variant="desktop"
+            isConnected={qubicConnected}
+            onConnect={() => setQubicConnected(true)}
+            onDisconnect={() => setQubicConnected(false)}
+          />
+        </div>
       </div>
     </div>
   );

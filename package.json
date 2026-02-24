@@ -9,6 +9,7 @@
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint .",
+    "typecheck": "tsc -b --noEmit",
     "preview": "vite preview",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
