@@ -1,5 +1,5 @@
 import {
-  type ReactNode,
+  type PropsWithChildren,
   createContext,
   useContext,
   useState,
@@ -11,18 +11,16 @@ import {
 import type SignClient from "@walletconnect/sign-client";
 import type { SignClientTypes } from "@walletconnect/types";
 import { getQubicSignClient, QUBIC_CHAIN_ID, buildQubicDeepLink } from "@/lib/qubicWallet";
+import type { QubicAccount, QubicSession, ConnectionMethod } from "@/lib/qubic/types";
 import {
-  type QubicAccount,
-  type QubicSession,
-  type ConnectionMethod,
   connectViaWalletConnect,
-  connectViaMetaMask,
-  connectViaSeed,
-  connectViaVaultFile,
   hydrateFromWCSession,
   requestWCAccounts,
   disconnectWC,
-} from "@/lib/qubic";
+} from "@/lib/qubic/connectWalletConnect";
+import { connectViaMetaMask } from "@/lib/qubic/connectMetaMask";
+import { connectViaSeed } from "@/lib/qubic/connectSeed";
+import { connectViaVaultFile } from "@/lib/qubic/connectVault";
 import { fetchIdentitySnapshot, extractBalanceAmount } from "@/lib/qubicIdentity";
 import { formatCompactNumber } from "@/utils/format";
 
@@ -66,7 +64,7 @@ function balanceFromAccounts(accounts: QubicAccount[]): string | null {
   return amount != null ? formatCompactNumber(amount) : null;
 }
 
-export default function QubicWalletProvider({ children }: { children: ReactNode }) {
+export default function QubicWalletProvider({ children }: PropsWithChildren) {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<QubicSession | null>(null);
   const [accounts, setAccounts] = useState<QubicAccount[]>([]);

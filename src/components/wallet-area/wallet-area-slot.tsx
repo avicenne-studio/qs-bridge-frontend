@@ -1,4 +1,5 @@
-import { type ReactNode, useState, useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
+import { useToggle } from "@/hooks/use-toggle";
 import { Coins } from "lucide-react";
 import type { Address } from "viem";
 import { truncateAddress } from "@/utils/address";
@@ -30,10 +31,10 @@ export default function WalletAreaSlot({
   onDisconnect,
 }: Props) {
   const isMobile = variant === "mobile";
-  const [showDisconnect, setShowDisconnect] = useState(false);
+  const [showDisconnect, toggleShowDisconnect] = useToggle(false);
 
   const handleTap = useCallback(() => {
-    if (isMobile) setShowDisconnect((prev) => !prev);
+    if (isMobile) toggleShowDisconnect();
   }, [isMobile]);
 
   if (!isConnected) {
