@@ -1,5 +1,5 @@
-import ComboTextStats from "@/domains/activity/react/components/combo-text-stats/combo-text-stats";
-import ActivityTable from "@/domains/activity/react/components/table/activity-table";
+import ComboTextStats from "@/components/stats/combo-text-stats";
+import ActivityTable from "@/domains/activity/react/components/activity-table";
 import cn from "@/utils/classnames";
 import { Lock, Network } from "lucide-react";
 

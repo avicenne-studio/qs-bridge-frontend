@@ -9,68 +9,27 @@ import {
 } from "@tanstack/react-table";
 import { useState } from "react";
 import HeadCell from "./cells/head-cell";
-import OrderStatusCell from "./cells/order-status-cell";
-import TableAddressCell from "./cells/table-address-cell";
-import TableDateCell from "./cells/table-date-cell";
-import BasicCell from "./cells/basic-cell";
 import PaginationButton from "./pagination-button";
-import type { ActivityRow } from "@/domains/activity/activity.types";
-import { MOCKED_TABLE_DATA } from "@/domains/activity/activity.constants";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { getHeadCellSortDirection, getHeadCellSortTitle } from "./table.utils";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
-const PAGE_SIZE = 5;
+interface DataTableProps<TData> {
+  data: TData[];
+  columns: ColumnDef<TData>[];
+  pageSize?: number;
+}
 
-const columns: ColumnDef<ActivityRow>[] = [
-  {
-    accessorKey: "status",
-    header: () => "Status",
-    cell: ({ row }) => <OrderStatusCell status={row.original.status} />,
-  },
-  {
-    accessorKey: "orderId",
-    header: () => "Order ID",
-    cell: ({ row }) => <BasicCell>{row.original.orderId}</BasicCell>,
-  },
-  {
-    accessorKey: "direction",
-    header: () => "Direction",
-    cell: ({ row }) => <BasicCell>{row.original.direction}</BasicCell>,
-  },
-  {
-    accessorKey: "from",
-    header: () => "From",
-    cell: ({ row }) => <TableAddressCell address={row.original.from} />,
-  },
-  {
-    accessorKey: "to",
-    header: () => "To",
-    cell: ({ row }) => <TableAddressCell address={row.original.to} />,
-  },
-  {
-    accessorKey: "amount",
-    header: () => "Amount",
-    cell: ({ row }) => <BasicCell>{row.original.amount}</BasicCell>,
-  },
-  {
-    accessorKey: "date",
-    header: () => "Date",
-    cell: ({ row }) => <TableDateCell date={row.original.date} />,
-  },
-];
-
-export default function ActivityTable() {
+export default function DataTable<TData>({ data, columns, pageSize = 10 }: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({
-    //Todo: get data from backend
-    data: MOCKED_TABLE_DATA,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     // Todo: when sorting via backend, remove getSortedRowModel()
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageIndex: 0, pageSize: PAGE_SIZE } },
+    initialState: { pagination: { pageIndex: 0, pageSize } },
     state: { sorting },
     onSortingChange: setSorting,
   });
@@ -79,7 +38,6 @@ export default function ActivityTable() {
     <>
       <section className="w-full overflow-x-auto">
         <table className="table-fixed border-collapse min-w-[1050px] w-full">
-          {/* colgroup: set column widths */}
           <colgroup>
             {columns.map((_, i) => (
               <col

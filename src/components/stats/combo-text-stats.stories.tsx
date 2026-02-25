@@ -3,7 +3,7 @@ import { Activity } from "lucide-react";
 import ComboTextStats from "./combo-text-stats";
 
 const meta: Meta<typeof ComboTextStats> = {
-  title: "Activity/ComboTextStats",
+  title: "Stats/ComboTextStats",
   component: ComboTextStats,
   parameters: {
     layout: "centered",
