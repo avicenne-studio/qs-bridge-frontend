@@ -1,5 +1,6 @@
 import ComboTextStats from "@/domains/activity/react/components/combo-text-stats/combo-text-stats";
 import ActivityTable from "@/domains/activity/react/components/table/activity-table";
+import cn from "@/utils/classnames";
 import { Lock, Network } from "lucide-react";
 
 export default function ActivityPage() {
@@ -11,7 +12,7 @@ export default function ActivityPage() {
 
   return (
     <div className="w-full pt-6 flex gap-10 flex-col">
-      <section className="grid w-full grid-cols-4 gap-3">
+      <section className={cn("grid w-full gap-3", "grid-cols-1 md:grid-cols-4")}>
         {stats.map((stat) => (
           <ComboTextStats
             key={stat.title}

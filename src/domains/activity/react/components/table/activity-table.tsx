@@ -78,11 +78,15 @@ export default function ActivityTable() {
   return (
     <>
       <section className="w-full overflow-x-auto">
-        <table className="w-full min-w-[600px] table-fixed border-collapse">
+        <table className="table-fixed border-collapse min-w-[1050px] w-full">
           {/* colgroup: set column widths */}
           <colgroup>
             {columns.map((_, i) => (
-              <col key={i} style={{ width: `${100 / columns.length}%` }} />
+              <col
+                key={i}
+                style={{ width: `${100 / columns.length}%` }}
+                className="min-w-[150px]"
+              />
             ))}
           </colgroup>
 
