@@ -54,8 +54,7 @@ export function useQubicWallet() {
   return ctx;
 }
 
-const PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
-if (!PROJECT_ID) throw new Error("VITE_WALLETCONNECT_PROJECT_ID is not set");
+const PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string;
 
 const BALANCE_REFRESH_MS = 30_000;
 

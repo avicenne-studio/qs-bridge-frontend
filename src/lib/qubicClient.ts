@@ -19,7 +19,7 @@ type QubicClient = InstanceType<typeof Qubic>;
 
 let instance: QubicClient | null = null;
 
-const RPC_URL = import.meta.env.VITE_QUBIC_RPC_URL?.trim() || "https://rpc.qubic.org";
+const RPC_URL = import.meta.env.VITE_QUBIC_RPC_URL as string;
 
 export const getQubicClient = (): QubicClient => {
   if (!instance) {

@@ -1,7 +1,7 @@
 import SignClient from "@walletconnect/sign-client";
 import type { ProposalTypes, SignClientTypes } from "@walletconnect/types";
 
-export const QUBIC_CHAIN_ID = `qubic:${import.meta.env.VITE_QUBIC_NETWORK ?? "testnet"}` as const;
+export const QUBIC_CHAIN_ID = `qubic:${import.meta.env.VITE_QUBIC_NETWORK}` as const;
 
 const QUBIC_METHODS = [
   "qubic_requestAccounts",

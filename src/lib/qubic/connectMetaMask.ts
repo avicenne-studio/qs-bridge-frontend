@@ -1,8 +1,8 @@
 import { extractBalanceAmount, fetchIdentitySnapshot } from "../qubicIdentity";
 import type { QubicAccount, QubicSession } from "./types";
 
-const SNAP_ID = import.meta.env.VITE_QUBIC_SNAP_ID || "npm:@ardata-tech/qubic-wallet";
-const SNAP_VERSION = import.meta.env.VITE_QUBIC_SNAP_VERSION || "1.0.7";
+const SNAP_ID = import.meta.env.VITE_QUBIC_SNAP_ID as string;
+const SNAP_VERSION = import.meta.env.VITE_QUBIC_SNAP_VERSION as string;
 
 export async function connectViaMetaMask(): Promise<{
   session: QubicSession;
