@@ -1,17 +1,23 @@
 import ComboTextStats from "@/components/stats/combo-text-stats";
-import ActivityTable from "@/domains/activity/react/components/activity-table";
+import EmptyHistory from "@/domains/history/react/components/empty-history";
+import HistoryTable from "@/domains/history/react/components/table/history-table";
+import { MOCKED_HISTORY_DATA } from "@/domains/history/history.constants";
 import cn from "@/utils/classnames";
 import { Lock, Network } from "lucide-react";
 import type { ComponentProps } from "react";
 
 type Stats = ComponentProps<typeof ComboTextStats>;
 
-export default function ActivityPage() {
-  //Todo: get stats from backend
+export default function HistoryPage() {
+  // Todo: get stats from backend
+  const orders = MOCKED_HISTORY_DATA;
+
   const stats: Stats[] = [
-    { title: "Total orders", value: "123", Icon: Network },
+    { title: "Total transactions", value: orders.length.toString(), Icon: Network },
     { title: "Total locked", value: "123", currency: "QUBIC", Icon: Lock },
   ];
+
+  const hasOrders = orders.length > 0;
 
   return (
     <div className="w-full pt-6 flex gap-10 flex-col">
@@ -21,7 +27,7 @@ export default function ActivityPage() {
         ))}
       </section>
 
-      <ActivityTable />
+      {hasOrders ? <HistoryTable data={orders} /> : <EmptyHistory />}
     </div>
   );
 }
