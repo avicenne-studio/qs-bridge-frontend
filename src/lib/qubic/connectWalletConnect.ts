@@ -8,7 +8,9 @@ const USER_DISCONNECTED = { code: 6000, message: "User disconnected" };
 export function hydrateFromWCSession(session: SessionTypes.Struct): QubicSession | null {
   const namespace = session.namespaces?.qubic;
   const primary = parseQubicAccount(namespace?.accounts?.[0] ?? "");
+
   if (!namespace || !primary) return null;
+
   return {
     kind: "walletconnect",
     topic: session.topic,
@@ -39,9 +41,12 @@ export async function connectViaWalletConnect(
 ): Promise<{ session: QubicSession }> {
   if (currentTopic) {
     try {
-      await client.disconnect({ topic: currentTopic, reason: USER_DISCONNECTED });
-    } catch (err) {
-      console.error("[Qubic] stale session disconnect failed:", err);
+      await client.disconnect({
+        topic: currentTopic,
+        reason: USER_DISCONNECTED,
+      });
+    } catch {
+      // Stale session cleanup is best-effort; continue with new pairing
     }
   }
 

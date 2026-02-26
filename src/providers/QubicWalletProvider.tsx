@@ -3,26 +3,17 @@ import {
   createContext,
   useContext,
   useState,
-  useCallback,
   useEffect,
   useRef,
-  useMemo,
 } from "react";
-import type SignClient from "@walletconnect/sign-client";
-import type { SignClientTypes } from "@walletconnect/types";
-import { getQubicSignClient, QUBIC_CHAIN_ID, buildQubicDeepLink } from "@/lib/qubicWallet";
+import { buildQubicDeepLink } from "@/lib/qubicWallet";
 import type { QubicAccount, QubicSession, ConnectionMethod } from "@/lib/qubic/types";
-import {
-  connectViaWalletConnect,
-  hydrateFromWCSession,
-  requestWCAccounts,
-  disconnectWC,
-} from "@/lib/qubic/connectWalletConnect";
+import { connectViaWalletConnect, disconnectWC } from "@/lib/qubic/connectWalletConnect";
 import { connectViaMetaMask } from "@/lib/qubic/connectMetaMask";
 import { connectViaSeed } from "@/lib/qubic/connectSeed";
 import { connectViaVaultFile } from "@/lib/qubic/connectVault";
-import { fetchIdentitySnapshot, extractBalanceAmount } from "@/lib/qubicIdentity";
-import { formatCompactNumber } from "@/utils/format";
+import { useQubicSignClient } from "@/hooks/useQubicSignClient";
+import { useWCBalancePolling, useLocalBalancePolling } from "@/hooks/useBalancePolling";
 
 export type { QubicAccount, QubicSession, ConnectionMethod };
 
@@ -51,20 +42,13 @@ const QubicWalletContext = createContext<QubicWalletState | null>(null);
 export function useQubicWallet() {
   const ctx = useContext(QubicWalletContext);
   if (!ctx) throw new Error("useQubicWallet must be used within QubicWalletProvider");
+
   return ctx;
 }
 
 const PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string;
 
-const BALANCE_REFRESH_MS = 30_000;
-
-function balanceFromAccounts(accounts: QubicAccount[]): string | null {
-  const amount = accounts[0]?.amount;
-  return amount != null ? formatCompactNumber(amount) : null;
-}
-
 export default function QubicWalletProvider({ children }: PropsWithChildren) {
-  const [ready, setReady] = useState(false);
   const [session, setSession] = useState<QubicSession | null>(null);
   const [accounts, setAccounts] = useState<QubicAccount[]>([]);
   const [balance, setBalance] = useState<string | null>(null);
@@ -72,7 +56,6 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
   const [connecting, setConnecting] = useState(false);
   const [metamaskAvailable, setMetamaskAvailable] = useState(false);
 
-  const clientRef = useRef<SignClient | null>(null);
   const sessionRef = useRef<QubicSession | null>(null);
   sessionRef.current = session;
 
@@ -82,23 +65,39 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
       : session.method
     : null;
 
-  const applyConnect = useCallback(
-    (result: { session: QubicSession; accounts?: QubicAccount[] }) => {
-      setSession(result.session);
-      if (result.accounts?.length) {
-        setAccounts(result.accounts);
-        setBalance(balanceFromAccounts(result.accounts));
-      }
-    },
-    [],
-  );
-
-  const resetState = useCallback(() => {
+  function resetState() {
     setSession(null);
     setAccounts([]);
     setBalance(null);
     setWalletConnectUri(null);
-  }, []);
+  }
+
+  function applyConnect(result: { session: QubicSession; accounts?: QubicAccount[] }) {
+    setSession(result.session);
+    if (result.accounts?.length) {
+      setAccounts(result.accounts);
+      const amount = result.accounts[0]?.amount;
+      setBalance(amount != null ? String(amount) : null);
+    }
+  }
+
+  const { ready, restoredSession, getClient } = useQubicSignClient({
+    projectId: PROJECT_ID,
+    onSessionDelete: (topic) => {
+      const s = sessionRef.current;
+      if (s?.kind === "walletconnect" && s.topic === topic) resetState();
+    },
+    onAccountsChanged: (accs) => {
+      setAccounts(accs);
+      const amount = accs[0]?.amount;
+      setBalance(amount != null ? String(amount) : null);
+    },
+    onSessionUpdate: setSession,
+  });
+
+  useEffect(() => {
+    if (restoredSession) setSession(restoredSession);
+  }, [restoredSession]);
 
   useEffect(() => {
     setMetamaskAvailable(Boolean(window.ethereum?.request));
@@ -107,130 +106,22 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
   const wcTopic = session?.kind === "walletconnect" ? session.topic : null;
   const localAddress = session?.kind === "local" ? session.address : null;
 
+  const wcPolling = useWCBalancePolling(getClient, wcTopic);
+  const localPolling = useLocalBalancePolling(localAddress);
+
   useEffect(() => {
-    if (!wcTopic) return;
-    const client = clientRef.current;
-    if (!client) return;
-
-    let cancelled = false;
-
-    async function poll() {
-      try {
-        const accs = await requestWCAccounts(client!, wcTopic!);
-        if (cancelled || !accs.length) return;
-        setAccounts(accs);
-        setBalance(balanceFromAccounts(accs));
-      } catch (err) {
-        console.error("[Qubic] WC balance poll failed:", err);
-      }
+    if (wcTopic) {
+      setAccounts(wcPolling.accounts);
+      setBalance(wcPolling.balance);
     }
-
-    poll();
-    const id = setInterval(poll, BALANCE_REFRESH_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [wcTopic]);
+  }, [wcTopic, wcPolling.accounts, wcPolling.balance]);
 
   useEffect(() => {
-    if (!localAddress) return;
+    if (localAddress) setBalance(localPolling.balance);
+  }, [localAddress, localPolling.balance]);
 
-    let cancelled = false;
-
-    async function poll() {
-      try {
-        const snapshot = await fetchIdentitySnapshot(localAddress!);
-        if (cancelled) return;
-        const amount = extractBalanceAmount(snapshot);
-        if (amount != null) setBalance(formatCompactNumber(amount));
-      } catch (err) {
-        console.error("[Qubic] local balance poll failed:", err);
-      }
-    }
-
-    poll();
-    const id = setInterval(poll, BALANCE_REFRESH_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [localAddress]);
-
-  useEffect(() => {
-    let mounted = true;
-    let detach: (() => void) | undefined;
-
-    (async () => {
-      try {
-        const client = await getQubicSignClient(PROJECT_ID);
-        clientRef.current = client;
-
-        if (!mounted) return;
-        setReady(true);
-
-        const existing = [...client.session.getAll()]
-          .reverse()
-          .find((s) => Boolean(s.namespaces?.qubic));
-
-        if (existing) {
-          const hydrated = hydrateFromWCSession(existing);
-          if (hydrated) setSession(hydrated);
-        }
-
-        const onDelete = ({ topic }: SignClientTypes.EventArguments["session_delete"]) => {
-          const s = sessionRef.current;
-          if (s?.kind === "walletconnect" && s.topic === topic) {
-            resetState();
-          }
-        };
-
-        const onEvent = ({ params }: SignClientTypes.EventArguments["session_event"]) => {
-          if (params.chainId !== QUBIC_CHAIN_ID) return;
-          const { name, data } = params.event;
-          if (
-            name === "accountsChanged" ||
-            name === "amountChanged" ||
-            name === "assetAmountChanged"
-          ) {
-            if (Array.isArray(data)) {
-              const accs = data as QubicAccount[];
-              setAccounts(accs);
-              setBalance(balanceFromAccounts(accs));
-            }
-          }
-        };
-
-        const onUpdate = ({ topic }: SignClientTypes.EventArguments["session_update"]) => {
-          const s = client.session.get(topic);
-          if (s) {
-            const hydrated = hydrateFromWCSession(s);
-            if (hydrated) setSession(hydrated);
-          }
-        };
-
-        client.on("session_delete", onDelete);
-        client.on("session_event", onEvent);
-        client.on("session_update", onUpdate);
-
-        detach = () => {
-          client.off("session_delete", onDelete);
-          client.off("session_event", onEvent);
-          client.off("session_update", onUpdate);
-        };
-      } catch (err) {
-        console.error("[Qubic] SignClient init failed:", err);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-      detach?.();
-    };
-  }, []);
-
-  const connectWalletConnect = useCallback(async () => {
-    const client = clientRef.current;
+  async function handleConnectWalletConnect() {
+    const client = getClient();
     if (!client) return;
     setConnecting(true);
 
@@ -239,106 +130,77 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
         sessionRef.current?.kind === "walletconnect" ? sessionRef.current.topic : null;
       const result = await connectViaWalletConnect(client, currentTopic, setWalletConnectUri);
       applyConnect(result);
-    } catch (err) {
-      console.error("[Qubic] WalletConnect pairing failed:", err);
     } finally {
       setWalletConnectUri(null);
       setConnecting(false);
     }
-  }, [applyConnect]);
+  }
 
-  const cancelPairing = useCallback(() => {
+  function cancelPairing() {
     setWalletConnectUri(null);
     setConnecting(false);
-  }, []);
+  }
 
-  const connectMetaMask = useCallback(async () => {
+  async function handleConnectMetaMask() {
     setConnecting(true);
     try {
       applyConnect(await connectViaMetaMask());
     } finally {
       setConnecting(false);
     }
-  }, [applyConnect]);
+  }
 
-  const connectWithSeed = useCallback(
-    async (seed: string) => {
-      setConnecting(true);
-      try {
-        applyConnect(await connectViaSeed(seed));
-      } finally {
-        setConnecting(false);
-      }
-    },
-    [applyConnect],
-  );
+  async function handleConnectWithSeed(seed: string) {
+    setConnecting(true);
+    try {
+      applyConnect(await connectViaSeed(seed));
+    } finally {
+      setConnecting(false);
+    }
+  }
 
-  const connectWithVaultFile = useCallback(
-    async (file: File, password: string) => {
-      setConnecting(true);
-      try {
-        applyConnect(await connectViaVaultFile(file, password));
-      } finally {
-        setConnecting(false);
-      }
-    },
-    [applyConnect],
-  );
+  async function handleConnectWithVaultFile(file: File, password: string) {
+    setConnecting(true);
+    try {
+      applyConnect(await connectViaVaultFile(file, password));
+    } finally {
+      setConnecting(false);
+    }
+  }
 
-  const disconnect = useCallback(async () => {
+  async function handleDisconnect() {
     try {
       const s = sessionRef.current;
-      if (s?.kind === "walletconnect" && clientRef.current) {
-        await disconnectWC(clientRef.current, s.topic).catch(() => {});
+      const client = getClient();
+      if (s?.kind === "walletconnect" && client) {
+        await disconnectWC(client, s.topic).catch(() => {});
       }
     } finally {
       resetState();
     }
-  }, [resetState]);
+  }
 
-  const deepLink = useMemo(
-    () => (walletConnectUri ? buildQubicDeepLink(walletConnectUri) : null),
-    [walletConnectUri],
-  );
+  const deepLink = walletConnectUri ? buildQubicDeepLink(walletConnectUri) : null;
 
-  const value = useMemo<QubicWalletState>(
-    () => ({
-      ready,
-      connected: !!session?.address,
-      connecting,
-      address: session?.address ?? null,
-      balance,
-      method,
-      session,
-      accounts,
-      walletConnectUri,
-      deepLink,
-      metamaskAvailable,
-      connectWalletConnect,
-      cancelPairing,
-      connectMetaMask,
-      connectWithSeed,
-      connectWithVaultFile,
-      disconnect,
-    }),
-    [
-      ready,
-      session,
-      connecting,
-      balance,
-      method,
-      accounts,
-      walletConnectUri,
-      deepLink,
-      metamaskAvailable,
-      connectWalletConnect,
-      cancelPairing,
-      connectMetaMask,
-      connectWithSeed,
-      connectWithVaultFile,
-      disconnect,
-    ],
-  );
+  const value: QubicWalletState = {
+    ready,
+    connected: !!session?.address,
+    connecting,
+    address: session?.address ?? null,
+    balance,
+    method,
+    session,
+    accounts,
+    walletConnectUri,
+    deepLink,
+    metamaskAvailable,
+    connectWalletConnect: handleConnectWalletConnect,
+    cancelPairing,
+    connectMetaMask: handleConnectMetaMask,
+    connectWithSeed: handleConnectWithSeed,
+    connectWithVaultFile: handleConnectWithVaultFile,
+    disconnect: handleDisconnect,
+  };
 
   return <QubicWalletContext.Provider value={value}>{children}</QubicWalletContext.Provider>;
 }

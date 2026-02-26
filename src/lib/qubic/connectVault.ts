@@ -9,7 +9,11 @@ import type { QubicAccount, QubicSession } from "./types";
 export async function connectViaVaultFile(
   file: File,
   password: string,
-): Promise<{ session: QubicSession; accounts: QubicAccount[] }> {
+): Promise<{
+  session: QubicSession;
+  accounts: QubicAccount[];
+  warnings?: string[];
+}> {
   if (!password.trim()) throw new Error("Password is required to unlock the vault.");
 
   const vault = new QubicVault();
@@ -24,36 +28,36 @@ export async function connectViaVaultFile(
       "This vault only contains watch-only accounts. Import a vault with a spendable seed.",
     );
 
-  const derived = await Promise.allSettled(
-    seeds.map(async (seed): Promise<QubicAccount> => {
+  const usable: QubicAccount[] = [];
+  const errors: Error[] = [];
+
+  for (const seed of seeds) {
+    try {
       const revealed = await vault.revealSeed(seed.publicId);
       const identity = await deriveIdentityFromSeed(revealed);
       const snapshot = await fetchIdentitySnapshot(identity.publicId).catch(() => null);
-      return {
+
+      usable.push({
         address: identity.publicId,
         name: seed.alias ?? seed.publicId,
         amount: extractBalanceAmount(snapshot),
-      };
-    }),
-  );
-
-  const errors = derived.filter((r): r is PromiseRejectedResult => r.status === "rejected");
-  errors.forEach((r) => console.error("[Qubic] vault seed derivation failed:", r.reason));
-
-  const usable = derived
-    .filter((r): r is PromiseFulfilledResult<QubicAccount> => r.status === "fulfilled")
-    .map((r) => r.value);
+      });
+    } catch (err) {
+      errors.push(err instanceof Error ? err : new Error(String(err)));
+    }
+  }
 
   if (!usable.length) {
-    const reason =
-      errors[0]?.reason instanceof Error
-        ? errors[0].reason.message
-        : String(errors[0]?.reason ?? "unknown error");
-    throw new Error(`Unable to derive any accounts from this vault: ${reason}`);
+    throw new Error(
+      `Unable to derive any accounts from this vault: ${errors[0]?.message ?? "unknown error"}`,
+    );
   }
+
+  const warnings = errors.map((e) => e.message);
 
   return {
     session: { kind: "local", method: "vault", address: usable[0].address },
     accounts: usable,
+    ...(warnings.length ? { warnings } : {}),
   };
 }

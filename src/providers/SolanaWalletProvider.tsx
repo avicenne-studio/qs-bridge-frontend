@@ -1,11 +1,4 @@
-import {
-  createContext,
-  type PropsWithChildren,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, type PropsWithChildren, useContext, useEffect, useState } from "react";
 import {
   ConnectionProvider,
   WalletProvider,
@@ -47,14 +40,14 @@ function SolanaBalanceProvider({ children }: PropsWithChildren) {
     async function fetchBalance() {
       try {
         const tokenAccounts = await connection.getParsedTokenAccountsByOwner(publicKey!, {
-          mint: WQUBIC_MINT!,
+          mint: WQUBIC_MINT,
           programId: TOKEN_PROGRAM_ID,
         });
         if (cancelled) return;
         const amount = tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount ?? 0;
         setBalance(formatCompactNumber(Math.floor(amount)));
-      } catch (err) {
-        console.error("[Solana] wQubic balance fetch failed:", err);
+      } catch {
+        // Balance fetch failures are transient; next interval will retry
       }
     }
 
@@ -73,15 +66,9 @@ function SolanaBalanceProvider({ children }: PropsWithChildren) {
 }
 
 export default function SolanaWalletProvider({ children }: PropsWithChildren) {
-  const endpoint = useMemo(() => SOLANA_RPC_URL, []);
-
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider
-        wallets={[]}
-        autoConnect
-        onError={(error) => console.error("[Solana Wallet]", error)}
-      >
+    <ConnectionProvider endpoint={SOLANA_RPC_URL}>
+      <WalletProvider wallets={[]} autoConnect>
         <SolanaBalanceProvider>{children}</SolanaBalanceProvider>
       </WalletProvider>
     </ConnectionProvider>

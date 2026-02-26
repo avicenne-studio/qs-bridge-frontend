@@ -19,7 +19,7 @@ export default function WalletConnectPage({ qubic, onError }: Props) {
     qubic.connectWalletConnect().catch((e: unknown) => {
       onError(e instanceof Error ? e.message : "WalletConnect pairing failed.");
     });
-  }, []);
+  }, [qubic, onError]);
 
   async function handleCopy() {
     if (!qubic.walletConnectUri) return;

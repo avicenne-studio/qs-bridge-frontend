@@ -16,10 +16,9 @@ export async function connectViaMetaMask(): Promise<{
     params: { [SNAP_ID]: { version: SNAP_VERSION } },
   });
 
-  const snaps = (await provider.request({ method: "wallet_getSnaps" })) as Record<
-    string,
-    { id: string }
-  >;
+  const snaps = (await provider.request({
+    method: "wallet_getSnaps",
+  })) as Record<string, { id: string }>;
   const resolvedId = Object.values(snaps ?? {}).find((s) => s.id === SNAP_ID)?.id ?? SNAP_ID;
 
   let accounts = await tryRequestAccounts(provider, resolvedId);
@@ -29,7 +28,10 @@ export async function connectViaMetaMask(): Promise<{
       method: "wallet_invokeSnap",
       params: {
         snapId: resolvedId,
-        request: { method: "getPublicId", params: { accountIdx: 0, confirm: false } },
+        request: {
+          method: "getPublicId",
+          params: { accountIdx: 0, confirm: false },
+        },
       },
     })) as string;
 
@@ -46,7 +48,11 @@ export async function connectViaMetaMask(): Promise<{
   const enriched = accounts.map((a, i) => (i === 0 && amount != null ? { ...a, amount } : a));
 
   return {
-    session: { kind: "local", method: "metamask", address: enriched[0].address },
+    session: {
+      kind: "local",
+      method: "metamask",
+      address: enriched[0].address,
+    },
     accounts: enriched,
   };
 }
@@ -58,7 +64,10 @@ async function tryRequestAccounts(
   try {
     return (await provider.request({
       method: "wallet_invokeSnap",
-      params: { snapId, request: { method: "qubic_requestAccounts", params: {} } },
+      params: {
+        snapId,
+        request: { method: "qubic_requestAccounts", params: {} },
+      },
     })) as QubicAccount[];
   } catch (e) {
     const code = (e as { code?: number }).code;
