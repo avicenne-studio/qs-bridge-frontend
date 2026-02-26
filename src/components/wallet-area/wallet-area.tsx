@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { Address } from "viem";
 import WalletAreaSlot from "./wallet-area-slot";
 import SolanaIcon from "@/components/core/assets/solana-icon";
 import QubicIcon from "@/components/core/assets/qubic-icon";
@@ -11,7 +12,7 @@ export default function WalletArea() {
   const SOLANA_WALLET_CONFIG = {
     connectWalletLabel: "Connect Solana Wallet",
     icon: <SolanaIcon />,
-    address: "9xA4b2c3d4e5f6K8Lm",
+    address: "0x9xA4b2c3d4e5f6K8Lm00000000000000000000" as Address,
     balance: "122",
     currency: "SOL",
   } as const;
@@ -19,7 +20,7 @@ export default function WalletArea() {
   const QUBIC_WALLET_CONFIG = {
     connectWalletLabel: "Connect Qubic Wallet",
     icon: <QubicIcon />,
-    address: "DQJQp4k2m8nYAHN",
+    address: "0xDQJQp4k2m8nYAHN0000000000000000000000" as Address,
     balance: "450",
     currency: "QUBIC",
   } as const;

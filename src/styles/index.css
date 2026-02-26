@@ -23,3 +23,29 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+/* CellHead sort icon: 
+ArrowUpDown has 4 paths. Paths 1-2 = down arrow, 3-4 = up arrow. stroke for color. */
+[data-sort="none"] path {
+  stroke: #b2b2b2;
+}
+
+[data-sort="asc"] path:nth-child(1),
+[data-sort="asc"] path:nth-child(2) {
+  stroke: #b2b2b2;
+}
+
+[data-sort="asc"] path:nth-child(3),
+[data-sort="asc"] path:nth-child(4) {
+  stroke: var(--color-primary);
+}
+
+[data-sort="desc"] path:nth-child(1),
+[data-sort="desc"] path:nth-child(2) {
+  stroke: var(--color-primary);
+}
+
+[data-sort="desc"] path:nth-child(3),
+[data-sort="desc"] path:nth-child(4) {
+  stroke: #b2b2b2;
+}

@@ -15,9 +15,10 @@ export default function MainLayout() {
   return (
     <div
       className={cn(
-        "flex w-screen h-dvh relative flex-col overflow-auto",
-        "bg-primary xl:bg-primary",
+        "flex w-screen h-dvh relative bg-primary",
         "xl:pt-4",
+        "overflow-auto xl:overflow-hidden",
+        "flex-col xl:flex-row",
       )}
     >
       <TopBar />
@@ -26,10 +27,11 @@ export default function MainLayout() {
 
       <main
         className={cn(
-          "size-full bg-white overflow-hidden pl-7",
+          "size-full bg-white overflow-hidden",
           "pb-20 xl:pb-0",
           "rounded-tl-2xl xl:rounded-tl-4xl",
           "mt-8",
+          "pl-4 xl:pl-7",
         )}
       >
         <div className={cn("flex w-full bg-primary rounded-tl-4xl", "h-[50px] xl:h-[90px]")}>
@@ -46,7 +48,7 @@ export default function MainLayout() {
           <WalletArea />
         </div>
 
-        <div className="size-full overflow-auto">
+        <div className={cn("size-full overflow-auto bg-white", "pr-4 xl:pr-7")}>
           <Outlet />
         </div>
       </main>
