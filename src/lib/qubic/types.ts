@@ -1,3 +1,5 @@
+import type { Address } from "viem";
+
 export type QubicAccount = {
   address: string;
   name?: string;
@@ -10,7 +12,7 @@ export type QubicSession =
   | {
       kind: "walletconnect";
       topic: string;
-      address: string;
+      address: Address;
       chainId: string;
       expiry?: number;
       walletName?: string;
@@ -19,5 +21,5 @@ export type QubicSession =
   | {
       kind: "local";
       method: "metamask" | "seed" | "vault";
-      address: string;
+      address: Address;
     };

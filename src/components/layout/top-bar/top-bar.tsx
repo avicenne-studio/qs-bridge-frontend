@@ -33,7 +33,7 @@ export default function TopBar() {
           <WalletAreaSlot
             connectWalletLabel="Connect Solana Wallet"
             icon={<SolanaIcon />}
-            address={solana.address ?? ""}
+            address={solana.address}
             balance={solana.balance ?? "---"}
             currency="wQUBIC"
             variant="mobile"
@@ -45,7 +45,7 @@ export default function TopBar() {
           <WalletAreaSlot
             connectWalletLabel="Connect Qubic Wallet"
             icon={<QubicIcon />}
-            address={qubic.address ?? ""}
+            address={qubic.address}
             balance={qubic.balance ?? "---"}
             currency="QUBIC"
             variant="mobile"

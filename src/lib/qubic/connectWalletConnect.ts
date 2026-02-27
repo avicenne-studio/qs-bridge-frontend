@@ -2,6 +2,7 @@ import type SignClient from "@walletconnect/sign-client";
 import type { SessionTypes } from "@walletconnect/types";
 import { QUBIC_CHAIN_ID, QUBIC_OPTIONAL_NAMESPACES, parseQubicAccount } from "../qubicWallet";
 import type { QubicAccount, QubicSession } from "./types";
+import type { Address } from "viem";
 
 const USER_DISCONNECTED = { code: 6000, message: "User disconnected" };
 
@@ -14,7 +15,7 @@ export function hydrateFromWCSession(session: SessionTypes.Struct): QubicSession
   return {
     kind: "walletconnect",
     topic: session.topic,
-    address: primary.address,
+    address: primary.address as Address,
     chainId: primary.chainId,
     expiry: typeof session.expiry === "number" ? session.expiry * 1000 : undefined,
     walletName: session.peer.metadata?.name,

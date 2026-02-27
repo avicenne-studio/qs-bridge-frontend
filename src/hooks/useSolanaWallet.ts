@@ -1,6 +1,7 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useMemo } from "react";
 import { useSolanaBalance } from "@/providers/SolanaWalletProvider";
+import type { Address } from "viem";
 
 export default function useSolanaWallet() {
   const { wallets, select, disconnect, connected, connecting, publicKey, wallet } = useWallet();
@@ -16,7 +17,7 @@ export default function useSolanaWallet() {
     [wallets],
   );
 
-  const address = useMemo(() => publicKey?.toBase58() ?? null, [publicKey]);
+  const address = useMemo(() => publicKey?.toBase58() as Address | null, [publicKey]);
 
   const connectWallet = useCallback(
     (walletName: string) => {

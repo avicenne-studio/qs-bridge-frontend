@@ -1,3 +1,4 @@
+import type { Address } from "viem";
 import {
   deriveIdentityFromSeed,
   deriveIdentityFromPrivateKey,
@@ -36,7 +37,7 @@ export async function connectViaSeed(
   };
 
   return {
-    session: { kind: "local", method: "seed", address: publicId },
+    session: { kind: "local", method: "seed", address: publicId as Address },
     accounts: [acc],
   };
 }

@@ -14,6 +14,7 @@ import { connectViaSeed } from "@/lib/qubic/connectSeed";
 import { connectViaVaultFile } from "@/lib/qubic/connectVault";
 import { useQubicSignClient } from "@/hooks/useQubicSignClient";
 import { useWCBalancePolling, useLocalBalancePolling } from "@/hooks/useBalancePolling";
+import type { Address } from "viem";
 
 export type { QubicAccount, QubicSession, ConnectionMethod };
 
@@ -21,7 +22,7 @@ export interface QubicWalletState {
   ready: boolean;
   connected: boolean;
   connecting: boolean;
-  address: string | null;
+  address: Address | null;
   balance: string | null;
   method: ConnectionMethod;
   session: QubicSession | null;

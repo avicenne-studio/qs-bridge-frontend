@@ -1,6 +1,6 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import type { Address } from "viem";
-import { truncateAddress } from "@/utils/address";
+import { truncateAddress } from "@/utils/format";
 import CellLayout from "./cell-layout";
 
 interface Props {

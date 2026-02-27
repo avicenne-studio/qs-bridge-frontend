@@ -1,3 +1,4 @@
+import type { Address } from "viem";
 import { extractBalanceAmount, fetchIdentitySnapshot } from "../qubicIdentity";
 import type { QubicAccount, QubicSession } from "./types";
 
@@ -51,7 +52,7 @@ export async function connectViaMetaMask(): Promise<{
     session: {
       kind: "local",
       method: "metamask",
-      address: enriched[0].address,
+      address: enriched[0].address as Address,
     },
     accounts: enriched,
   };

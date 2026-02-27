@@ -5,6 +5,7 @@ import {
   fetchIdentitySnapshot,
 } from "../qubicIdentity";
 import type { QubicAccount, QubicSession } from "./types";
+import type { Address } from "viem";
 
 export async function connectViaVaultFile(
   file: File,
@@ -56,7 +57,7 @@ export async function connectViaVaultFile(
   const warnings = errors.map((e) => e.message);
 
   return {
-    session: { kind: "local", method: "vault", address: usable[0].address },
+    session: { kind: "local", method: "vault", address: usable[0].address as Address },
     accounts: usable,
     ...(warnings.length ? { warnings } : {}),
   };

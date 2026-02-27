@@ -25,10 +25,9 @@ export default function WalletArea() {
             variant="desktop"
             connectWalletLabel="Connect Solana Wallet"
             icon={<SolanaIcon />}
-            address={solana.address ?? ""}
+            address={solana.address}
             balance={solana.balance ?? "—"}
             currency="wQUBIC"
-            variant="desktop"
             isConnected={solana.connected}
             onConnect={() => setSolanaModalOpen(true)}
             onDisconnect={() => solana.disconnect()}
@@ -39,9 +38,10 @@ export default function WalletArea() {
           )}
 
           <WalletAreaSlot
+            variant="desktop"
             connectWalletLabel="Connect Qubic Wallet"
             icon={<QubicIcon />}
-            address={qubic.address ?? ""}
+            address={qubic.address}
             balance={qubic.balance ?? "—"}
             currency="QUBIC"
             isConnected={qubic.connected}
