@@ -101,7 +101,11 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
   }, [restoredSession]);
 
   useEffect(() => {
-    setMetamaskAvailable(Boolean(window.ethereum?.request));
+    setMetamaskAvailable(
+      Boolean(
+        window.ethereum && typeof window.ethereum === "object" && "request" in window.ethereum,
+      ),
+    );
   }, []);
 
   const wcTopic = session?.kind === "walletconnect" ? session.topic : null;

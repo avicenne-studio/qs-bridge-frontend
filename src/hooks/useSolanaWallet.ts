@@ -1,43 +1,18 @@
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useCallback, useMemo } from "react";
+import { useAppKitAccount, useAppKit, useDisconnect } from "@reown/appkit/react";
 import { useSolanaBalance } from "@/providers/SolanaWalletProvider";
 import type { Address } from "viem";
 
 export default function useSolanaWallet() {
-  const { wallets, select, disconnect, connected, connecting, publicKey, wallet } = useWallet();
+  const { isConnected, address: rawAddress } = useAppKitAccount();
+  const { open } = useAppKit();
+  const { disconnect } = useDisconnect();
   const { balance } = useSolanaBalance();
 
-  const installedWallets = useMemo(
-    () => wallets.filter((w) => w.readyState === "Installed"),
-    [wallets],
-  );
-
-  const notInstalledWallets = useMemo(
-    () => wallets.filter((w) => w.readyState === "NotDetected"),
-    [wallets],
-  );
-
-  const address = useMemo(() => publicKey?.toBase58() as Address | null, [publicKey]);
-
-  const connectWallet = useCallback(
-    (walletName: string) => {
-      const found = wallets.find((w) => w.adapter.name === walletName);
-      if (found) select(found.adapter.name);
-    },
-    [wallets, select],
-  );
-
   return {
-    installedWallets,
-    notInstalledWallets,
-    connected,
-    connecting,
-    publicKey,
-    address,
+    connected: isConnected,
+    address: (rawAddress as Address) ?? null,
     balance,
-    walletName: wallet?.adapter.name ?? null,
-    walletIcon: wallet?.adapter.icon ?? null,
-    connectWallet,
     disconnect,
+    openModal: () => open(),
   };
 }

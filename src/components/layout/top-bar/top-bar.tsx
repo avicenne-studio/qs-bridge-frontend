@@ -4,7 +4,6 @@ import QubicBridgeLogomark from "@/components/core/assets/qubic-bridge-logomark"
 import WalletAreaSlot from "@/components/wallet-area/wallet-area-slot";
 import SolanaIcon from "@/components/core/assets/solana-icon";
 import QubicIcon from "@/components/core/assets/qubic-icon";
-import SolanaWalletModal from "@/components/wallet-area/modals/solana-wallet-modal";
 import QubicWalletModal from "@/components/wallet-area/modals/qubic-wallet-modal";
 import useSolanaWallet from "@/hooks/useSolanaWallet";
 import { useQubicWallet } from "@/providers/QubicWalletProvider";
@@ -17,7 +16,6 @@ export default function TopBar() {
   const solana = useSolanaWallet();
   const qubic = useQubicWallet();
 
-  const [solanaModalOpen, setSolanaModalOpen] = useState(false);
   const [qubicModalOpen, setQubicModalOpen] = useState(false);
 
   return (
@@ -38,7 +36,7 @@ export default function TopBar() {
             currency="wQUBIC"
             variant="mobile"
             isConnected={solana.connected}
-            onConnect={() => setSolanaModalOpen(true)}
+            onConnect={() => solana.openModal()}
             onDisconnect={() => solana.disconnect()}
           />
           <div className="h-px mx-4 bg-primary/10" role="presentation" aria-hidden />
@@ -89,7 +87,6 @@ export default function TopBar() {
         </div>
       </div>
 
-      <SolanaWalletModal open={solanaModalOpen} onClose={() => setSolanaModalOpen(false)} />
       <QubicWalletModal open={qubicModalOpen} onClose={() => setQubicModalOpen(false)} />
     </div>
   );

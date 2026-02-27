@@ -4,7 +4,6 @@ import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import WalletAreaSlot from "./wallet-area-slot";
 import SolanaIcon from "@/components/core/assets/solana-icon";
 import QubicIcon from "@/components/core/assets/qubic-icon";
-import SolanaWalletModal from "./modals/solana-wallet-modal";
 import QubicWalletModal from "./modals/qubic-wallet-modal";
 import cn from "@/utils/classnames";
 
@@ -12,7 +11,6 @@ export default function WalletArea() {
   const solana = useSolanaWallet();
   const qubic = useQubicWallet();
 
-  const [solanaModalOpen, setSolanaModalOpen] = useState(false);
   const [qubicModalOpen, setQubicModalOpen] = useState(false);
 
   const showSeparator = solana.connected && qubic.connected;
@@ -29,7 +27,7 @@ export default function WalletArea() {
             balance={solana.balance ?? "—"}
             currency="wQUBIC"
             isConnected={solana.connected}
-            onConnect={() => setSolanaModalOpen(true)}
+            onConnect={() => solana.openModal()}
             onDisconnect={() => solana.disconnect()}
           />
 
@@ -50,7 +48,6 @@ export default function WalletArea() {
           />
         </div>
 
-        <SolanaWalletModal open={solanaModalOpen} onClose={() => setSolanaModalOpen(false)} />
         <QubicWalletModal open={qubicModalOpen} onClose={() => setQubicModalOpen(false)} />
       </div>
     </div>

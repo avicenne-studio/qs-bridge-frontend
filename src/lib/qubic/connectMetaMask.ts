@@ -1,6 +1,7 @@
 import type { Address } from "viem";
 import { extractBalanceAmount, fetchIdentitySnapshot } from "../qubicIdentity";
 import type { QubicAccount, QubicSession } from "./types";
+import { type Eip1193Provider, getEthereumProvider } from "@/types/window";
 
 const SNAP_ID = import.meta.env.VITE_QUBIC_SNAP_ID as string;
 const SNAP_VERSION = import.meta.env.VITE_QUBIC_SNAP_VERSION as string;
@@ -9,8 +10,8 @@ export async function connectViaMetaMask(): Promise<{
   session: QubicSession;
   accounts: QubicAccount[];
 }> {
-  const provider = window.ethereum;
-  if (!provider?.request) throw new Error("MetaMask not found.");
+  const provider = getEthereumProvider();
+  if (!provider) throw new Error("MetaMask not found.");
 
   await provider.request({
     method: "wallet_requestSnaps",
@@ -59,7 +60,7 @@ export async function connectViaMetaMask(): Promise<{
 }
 
 async function tryRequestAccounts(
-  provider: NonNullable<typeof window.ethereum>,
+  provider: Eip1193Provider,
   snapId: string,
 ): Promise<QubicAccount[] | undefined> {
   try {
