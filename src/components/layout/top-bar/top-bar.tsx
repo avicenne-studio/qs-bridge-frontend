@@ -1,33 +1,22 @@
 import { useState } from "react";
 import { Wallet } from "lucide-react";
-import type { Address } from "viem";
 import QubicBridgeLogomark from "@/components/core/assets/qubic-bridge-logomark";
 import WalletAreaSlot from "@/components/wallet-area/wallet-area-slot";
 import SolanaIcon from "@/components/core/assets/solana-icon";
 import QubicIcon from "@/components/core/assets/qubic-icon";
+import QubicWalletModal from "@/components/wallet-area/modals/qubic-wallet-modal";
+import useSolanaWallet from "@/hooks/useSolanaWallet";
+import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import { useToggle } from "@/hooks/use-toggle";
 import cn from "@/utils/classnames";
 
-const SOLANA_WALLET_CONFIG = {
-  connectWalletLabel: "Connect Solana Wallet",
-  icon: <SolanaIcon />,
-  address: "0x9xA4b2c3d4e5f6K8Lm00000000000000000000" as Address,
-  balance: "122",
-  currency: "SOL",
-} as const;
-
-const QUBIC_WALLET_CONFIG = {
-  connectWalletLabel: "Connect Qubic Wallet",
-  icon: <QubicIcon />,
-  address: "0xDQJQp4k2m8nYAHN0000000000000000000000" as Address,
-  balance: "450",
-  currency: "QUBIC",
-} as const;
-
 export default function TopBar() {
   const [isMenuOpen, toggleMenu] = useToggle(false);
-  const [solanaConnected, setSolanaConnected] = useState(false);
-  const [qubicConnected, setQubicConnected] = useState(false);
+
+  const solana = useSolanaWallet();
+  const qubic = useQubicWallet();
+
+  const [qubicModalOpen, setQubicModalOpen] = useState(false);
 
   return (
     <div className="sticky left-0 top-0 z-40 flex xl:hidden flex-col">
@@ -38,20 +27,29 @@ export default function TopBar() {
         )}
         aria-hidden={!isMenuOpen}
       >
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-1">
           <WalletAreaSlot
-            {...SOLANA_WALLET_CONFIG}
+            connectWalletLabel="Connect Solana Wallet"
+            icon={<SolanaIcon />}
+            address={solana.address}
+            balance={solana.balance ?? "---"}
+            currency="wQUBIC"
             variant="mobile"
-            isConnected={solanaConnected}
-            onConnect={() => setSolanaConnected(true)}
-            onDisconnect={() => setSolanaConnected(false)}
+            isConnected={solana.connected}
+            onConnect={() => solana.openModal()}
+            onDisconnect={() => solana.disconnect()}
           />
+          <div className="h-px mx-4 bg-primary/10" role="presentation" aria-hidden />
           <WalletAreaSlot
-            {...QUBIC_WALLET_CONFIG}
+            connectWalletLabel="Connect Qubic Wallet"
+            icon={<QubicIcon />}
+            address={qubic.address}
+            balance={qubic.balance ?? "---"}
+            currency="QUBIC"
             variant="mobile"
-            isConnected={qubicConnected}
-            onConnect={() => setQubicConnected(true)}
-            onDisconnect={() => setQubicConnected(false)}
+            isConnected={qubic.connected}
+            onConnect={() => setQubicModalOpen(true)}
+            onDisconnect={() => qubic.disconnect()}
           />
         </div>
       </div>
@@ -88,6 +86,8 @@ export default function TopBar() {
           </button>
         </div>
       </div>
+
+      <QubicWalletModal open={qubicModalOpen} onClose={() => setQubicModalOpen(false)} />
     </div>
   );
 }
