@@ -1,5 +1,6 @@
 import ComboTextStats from "@/components/stats/combo-text-stats";
 import EmptyHistory from "@/domains/history/react/components/empty-history";
+import HistoryFilters from "@/domains/history/react/components/filters/history-filters";
 import HistoryTable from "@/domains/history/react/components/table/history-table";
 import { MOCKED_HISTORY_DATA } from "@/domains/history/history.constants";
 import cn from "@/utils/classnames";
@@ -26,6 +27,8 @@ export default function HistoryPage() {
           <ComboTextStats key={title} title={title} value={value} currency={currency} Icon={Icon} />
         ))}
       </section>
+
+      <HistoryFilters />
 
       {hasOrders ? <HistoryTable data={orders} /> : <EmptyHistory />}
     </div>
