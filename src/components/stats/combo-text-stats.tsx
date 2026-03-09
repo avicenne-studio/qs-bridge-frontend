@@ -1,9 +1,10 @@
+import type { Currency } from "@/types/currency";
 import type { LucideIcon } from "lucide-react";
 
 interface Props {
   title: string;
   value: string;
-  currency?: string;
+  currency?: Currency;
   Icon: LucideIcon;
 }
 

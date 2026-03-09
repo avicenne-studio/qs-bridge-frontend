@@ -14,3 +14,8 @@ export function formatCompactNumber(value: number) {
     maximumFractionDigits: 2,
   }).format(value);
 }
+
+export function stringToDate(value: string) {
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? undefined : date;
+}
