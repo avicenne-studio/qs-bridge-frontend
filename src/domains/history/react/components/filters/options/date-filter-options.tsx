@@ -11,11 +11,8 @@ export default function DateFilterOptions({
   menuPanelClass,
   selectedDateFilter,
   onAddFilter,
-  setDatePickerOpen,
 }: FilterOptionComponentProps) {
-  const [datePickerOpen, setDatePickerOpenLocal] = useState(false);
-
-  const setDatePickerOpenState = setDatePickerOpen ?? setDatePickerOpenLocal;
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   function handleDateSelect(date: Date | undefined) {
     if (date === undefined) return;
@@ -26,7 +23,7 @@ export default function DateFilterOptions({
   const label = selectedDateFilter ? format(selectedDateFilter, "dd MMM yyyy") : "Pick a date";
 
   return (
-    <DropdownMenu.Root open={datePickerOpen} onOpenChange={setDatePickerOpenState}>
+    <DropdownMenu.Root open={datePickerOpen} onOpenChange={setDatePickerOpen}>
       <DropdownMenu.Trigger
         className={cn(
           "flex w-full items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-primary",
