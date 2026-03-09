@@ -19,3 +19,9 @@ export function stringToDate(value: string) {
   const date = new Date(value);
   return isNaN(date.getTime()) ? undefined : date;
 }
+
+export function replaceCommaByDot(value: string) {
+  if (!value.includes(",")) return value;
+
+  return value.replace(",", ".");
+}
