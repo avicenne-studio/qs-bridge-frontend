@@ -7,6 +7,9 @@ import cn from "@/utils/classnames";
 import BridgeInitialStep from "./components/steps/bridge-initial-step";
 import BridgeSuccessStep from "./components/steps/bridge-success-step";
 import { NETWORK } from "@/types/network";
+import NoWalletConnected from "@/domains/history/react/components/no-wallet-connected";
+import { useQubicWallet } from "@/providers/QubicWalletProvider";
+import useSolanaWallet from "@/hooks/useSolanaWallet";
 
 type WalletConfig = ComponentProps<typeof NetworkDirectionInformation>;
 
@@ -17,6 +20,9 @@ export default function BridgePage() {
   const [bridgeAmount, setBridgeAmount] = useState("");
   const [originNetwork, setOriginNetwork] = useState<NetworkTagNetwork>(NETWORK.Qubic);
   const [destinationNetwork, setDestinationNetwork] = useState<NetworkTagNetwork>(NETWORK.Solana);
+
+  const solana = useSolanaWallet();
+  const qubic = useQubicWallet();
 
   const { isLoading: isBridging, start: handleBridge } = useFakeLoading({
     delayMs: 2500,
@@ -51,6 +57,17 @@ export default function BridgePage() {
     originNetwork === NETWORK.Qubic ? SOLANA_WALLET_CONFIG : QUBIC_WALLET_CONFIG;
   const DESTINATION_WALLET_CONFIG: WalletConfig =
     originNetwork === NETWORK.Qubic ? QUBIC_WALLET_CONFIG : SOLANA_WALLET_CONFIG;
+
+  const isWalletConnected = solana.connected && qubic.connected;
+
+  if (!isWalletConnected) {
+    return (
+      <NoWalletConnected
+        description="Both wallets need to be connected to bridge your tokens."
+        walletRequired="all"
+      />
+    );
+  }
 
   return (
     <div className={cn("flex w-full flex-col gap-10", "p-0 py-8 xl:p-8")}>
