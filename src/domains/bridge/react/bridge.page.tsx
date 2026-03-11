@@ -1,17 +1,12 @@
-import { useState, type ComponentProps } from "react";
+import { useState } from "react";
 import type { NetworkTagNetwork } from "@/components/network-tag/network-tag";
-import NetworkDirectionInformation from "@/components/network-direction-information/network-direction-information";
-import type { Address } from "viem";
 import { useFakeLoading } from "@/hooks/use-fake-loading";
 import cn from "@/utils/classnames";
 import BridgeInitialStep from "./components/steps/bridge-initial-step";
 import BridgeSuccessStep from "./components/steps/bridge-success-step";
 import { NETWORK } from "@/types/network";
 import NoWalletConnected from "@/domains/history/react/components/no-wallet-connected";
-import { useQubicWallet } from "@/providers/QubicWalletProvider";
-import useSolanaWallet from "@/hooks/useSolanaWallet";
-
-type WalletConfig = ComponentProps<typeof NetworkDirectionInformation>;
+import { useWalletStore } from "@/stores/wallet.store";
 
 export type BridgeSteps = "initial" | "successful";
 
@@ -21,8 +16,7 @@ export default function BridgePage() {
   const [originNetwork, setOriginNetwork] = useState<NetworkTagNetwork>(NETWORK.Qubic);
   const [destinationNetwork, setDestinationNetwork] = useState<NetworkTagNetwork>(NETWORK.Solana);
 
-  const solana = useSolanaWallet();
-  const qubic = useQubicWallet();
+  const { qubic, solana } = useWalletStore();
 
   const { isLoading: isBridging, start: handleBridge } = useFakeLoading({
     delayMs: 2500,
@@ -30,35 +24,16 @@ export default function BridgePage() {
     onSuccess: () => setCurrentBridgeStep("successful"),
   });
 
+  function switchDirection() {
+    setOriginNetwork((direction) => (direction === NETWORK.Qubic ? NETWORK.Solana : NETWORK.Qubic));
+    setDestinationNetwork((direction) =>
+      direction === NETWORK.Qubic ? NETWORK.Solana : NETWORK.Qubic,
+    );
+  }
+
   const FEES_AMOUNT_MOCKED = "0.02";
 
-  const switchDirection = () => {
-    setOriginNetwork((prev) => (prev === NETWORK.Qubic ? NETWORK.Solana : NETWORK.Qubic));
-    setDestinationNetwork((prev) => (prev === NETWORK.Solana ? NETWORK.Qubic : NETWORK.Solana));
-  };
-
-  const QUBIC_WALLET_CONFIG: WalletConfig = {
-    network: NETWORK.Qubic,
-    walletAddress: "0x9xA4b2c3d4e5f6K8Lm00000000000000000000" as Address,
-    balance: "122",
-    currency: "QUBIC",
-    direction: "origin",
-  };
-
-  const SOLANA_WALLET_CONFIG: WalletConfig = {
-    network: NETWORK.Solana,
-    walletAddress: "0xDQJQp4k2m8nYAHN0000000000000000000000" as Address,
-    balance: "450",
-    currency: "wQUBIC",
-    direction: "destination",
-  };
-
-  const ORIGIN_WALLET_CONFIG: WalletConfig =
-    originNetwork === NETWORK.Qubic ? SOLANA_WALLET_CONFIG : QUBIC_WALLET_CONFIG;
-  const DESTINATION_WALLET_CONFIG: WalletConfig =
-    originNetwork === NETWORK.Qubic ? QUBIC_WALLET_CONFIG : SOLANA_WALLET_CONFIG;
-
-  const isWalletConnected = solana.connected && qubic.connected;
+  const isWalletConnected = solana.address && qubic.address;
 
   if (!isWalletConnected) {
     return (
@@ -80,8 +55,6 @@ export default function BridgePage() {
           onSwitchDirection={switchDirection}
           onBridge={handleBridge}
           isBridging={isBridging}
-          originWalletConfig={ORIGIN_WALLET_CONFIG}
-          destinationWalletConfig={DESTINATION_WALLET_CONFIG}
           feesAmount={FEES_AMOUNT_MOCKED}
         />
       )}
@@ -90,8 +63,6 @@ export default function BridgePage() {
         <BridgeSuccessStep
           originNetwork={originNetwork}
           destinationNetwork={destinationNetwork}
-          originWalletConfig={ORIGIN_WALLET_CONFIG}
-          destinationWalletConfig={DESTINATION_WALLET_CONFIG}
           amount={bridgeAmount}
           feesAmount={FEES_AMOUNT_MOCKED}
           newBridge={() => setCurrentBridgeStep("initial")}

@@ -8,8 +8,8 @@ import type { Address } from "viem";
 
 interface Props {
   network: NetworkTagNetwork;
-  walletAddress: Address;
-  balance: string;
+  walletAddress: Address | null;
+  balance: string | null;
   direction: "origin" | "destination";
   currency: Currency;
   hideBalance?: boolean;
@@ -48,7 +48,7 @@ export default function NetworkDirectionInformation({
         <div className="flex w-full items-center justify-between">
           <span className="text-base text-primary">Balance</span>
           <div className="flex items-center gap-1">
-            <TextMorph className="text-base text-primary font-semibold">{balance}</TextMorph>
+            <TextMorph className="text-base text-primary font-semibold">{balance ?? "0"}</TextMorph>
             <TextMorph className="text-base text-primary font-semibold">{currency}</TextMorph>
           </div>
         </div>

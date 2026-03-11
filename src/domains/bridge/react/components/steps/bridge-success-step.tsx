@@ -1,21 +1,18 @@
 import { ArrowDown, Plus } from "lucide-react";
 import type { NetworkTagNetwork } from "@/components/network-tag/network-tag";
 import NetworkDirectionInformation from "@/components/network-direction-information/network-direction-information";
-import type { ComponentProps } from "react";
 import Button from "@/components/core/buttons/button/button";
 import cn from "@/utils/classnames";
 import { routes } from "@/constants/routes";
 import Amount from "@/components/amounts/amount-input";
 import FeesDropdown from "../fees-dropdown";
 import BridgeDirectionSection from "../bridge-direction-section";
-
-type WalletConfig = ComponentProps<typeof NetworkDirectionInformation>;
+import { NETWORK_CURRENCY } from "@/types/network";
+import { useWalletStore } from "@/stores/wallet.store";
 
 interface Props {
   originNetwork: NetworkTagNetwork;
   destinationNetwork: NetworkTagNetwork;
-  originWalletConfig: WalletConfig;
-  destinationWalletConfig: WalletConfig;
   amount: string;
   feesAmount?: string;
   relayFeesAmount?: string;
@@ -25,8 +22,6 @@ interface Props {
 export default function BridgeSuccessStep({
   originNetwork,
   destinationNetwork,
-  originWalletConfig,
-  destinationWalletConfig,
   amount,
   feesAmount = "0.02",
   relayFeesAmount = "0",
@@ -37,8 +32,13 @@ export default function BridgeSuccessStep({
     parseFloat(formattedAmount) - parseFloat(feesAmount) - parseFloat(relayFeesAmount);
   const receivedAmountFormatted = receivedAmount < 0 ? "0" : receivedAmount.toString();
 
-  const originCurrency = originWalletConfig.currency;
-  const destinationCurrency = destinationWalletConfig.currency;
+  const originCurrency = NETWORK_CURRENCY[originNetwork];
+  const destinationCurrency = NETWORK_CURRENCY[destinationNetwork];
+
+  const { qubic, solana } = useWalletStore();
+
+  const originWallet = originNetwork === "Qubic" ? qubic : solana;
+  const destinationWallet = destinationNetwork === "Qubic" ? qubic : solana;
 
   return (
     <>
@@ -93,10 +93,10 @@ export default function BridgeSuccessStep({
           >
             <NetworkDirectionInformation
               network={originNetwork}
-              walletAddress={originWalletConfig.walletAddress}
-              balance={originWalletConfig.balance}
-              direction={originWalletConfig.direction}
-              currency={originWalletConfig.currency}
+              walletAddress={originWallet.address}
+              balance={originWallet.balance}
+              direction="origin"
+              currency={originCurrency}
               hideBalance
             />
 
@@ -104,10 +104,10 @@ export default function BridgeSuccessStep({
 
             <NetworkDirectionInformation
               network={destinationNetwork}
-              walletAddress={destinationWalletConfig.walletAddress}
-              balance={destinationWalletConfig.balance}
-              direction={destinationWalletConfig.direction}
-              currency={destinationWalletConfig.currency}
+              walletAddress={destinationWallet.address}
+              balance={destinationWallet.balance}
+              direction="destination"
+              currency={destinationCurrency}
               hideBalance
             />
           </div>

@@ -4,37 +4,37 @@ import type { NetworkTagNetwork } from "@/components/network-tag/network-tag";
 import BridgeAmountSection from "../bridge-amount-section";
 import BridgeDirectionSection from "../bridge-direction-section";
 import NetworkDirectionInformation from "@/components/network-direction-information/network-direction-information";
-import type { ComponentProps } from "react";
 import Button from "@/components/core/buttons/button/button";
 import cn from "@/utils/classnames";
-
-type WalletConfig = ComponentProps<typeof NetworkDirectionInformation>;
+import { useWalletStore } from "@/stores/wallet.store";
+import { NETWORK_CURRENCY } from "@/types/network";
 
 interface Props {
   bridgeAmount: string;
-  setBridgeAmount: (amount: string) => void;
   originNetwork: NetworkTagNetwork;
   destinationNetwork: NetworkTagNetwork;
+  isBridging: boolean;
+  feesAmount: string;
+  setBridgeAmount: (amount: string) => void;
   onSwitchDirection: () => void;
   onBridge: () => void;
-  isBridging: boolean;
-  originWalletConfig: WalletConfig;
-  destinationWalletConfig: WalletConfig;
-  feesAmount: string;
 }
 
 export default function BridgeInitialStep({
   bridgeAmount,
-  setBridgeAmount,
   originNetwork,
   destinationNetwork,
+  isBridging,
+  feesAmount,
+  setBridgeAmount,
   onSwitchDirection,
   onBridge,
-  isBridging,
-  originWalletConfig,
-  destinationWalletConfig,
-  feesAmount,
 }: Props) {
+  const { qubic, solana } = useWalletStore();
+
+  const originWallet = originNetwork === "Qubic" ? qubic : solana;
+  const destinationWallet = destinationNetwork === "Qubic" ? qubic : solana;
+
   return (
     <>
       <div className="grid grid-cols-2 gap-10">
@@ -53,9 +53,9 @@ export default function BridgeInitialStep({
             )}
           >
             <BridgeAmountSection
-              balance={originWalletConfig.balance}
-              originCurrency={originWalletConfig.currency}
-              destinationCurrency={destinationWalletConfig.currency}
+              balance={originWallet.balance}
+              originCurrency={NETWORK_CURRENCY[originNetwork]}
+              destinationCurrency={NETWORK_CURRENCY[destinationNetwork]}
               feesAmount={feesAmount}
               amount={bridgeAmount}
               setAmount={setBridgeAmount}
@@ -71,20 +71,20 @@ export default function BridgeInitialStep({
           >
             <NetworkDirectionInformation
               network={originNetwork}
-              walletAddress={originWalletConfig.walletAddress}
-              balance={originWalletConfig.balance}
+              walletAddress={originWallet.address}
+              balance={originWallet.balance}
               direction="origin"
-              currency={originWalletConfig.currency}
+              currency={NETWORK_CURRENCY[originNetwork]}
             />
 
             <ArrowDown className="text-primary shrink-0" size={16} aria-hidden strokeWidth={1.33} />
 
             <NetworkDirectionInformation
               network={destinationNetwork}
-              walletAddress={destinationWalletConfig.walletAddress}
-              balance={destinationWalletConfig.balance}
+              walletAddress={destinationWallet.address}
+              balance={destinationWallet.balance}
               direction="destination"
-              currency={destinationWalletConfig.currency}
+              currency={NETWORK_CURRENCY[destinationNetwork]}
             />
           </div>
         </div>

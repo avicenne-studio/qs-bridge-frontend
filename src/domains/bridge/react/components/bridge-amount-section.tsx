@@ -4,8 +4,8 @@ import type { Currency } from "@/types/currency";
 import FeesDropdown from "./fees-dropdown";
 
 interface Props {
-  amount: string;
-  balance: string;
+  amount: string | null;
+  balance: string | null;
   originCurrency: Currency;
   destinationCurrency: Currency;
   feesAmount?: string;
@@ -23,10 +23,10 @@ export default function BridgeAmountSection({
   setAmount,
 }: Props) {
   function setMax() {
-    setAmount(balance);
+    setAmount(balance ?? "0");
   }
 
-  const formattedAmount = amount === "" ? "0" : amount;
+  const formattedAmount = amount === "" || amount === null ? "0" : amount;
   const receivedAmount =
     parseFloat(formattedAmount) - parseFloat(feesAmount) - parseFloat(relayFeesAmount);
 
@@ -39,12 +39,12 @@ export default function BridgeAmountSection({
           Amount to bridge
         </label>
 
-        <Amount amount={amount} setAmount={setAmount} currency={originCurrency} />
+        <Amount amount={formattedAmount} setAmount={setAmount} currency={originCurrency} />
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-primary">Balance available</span>
           <span className="text-xs text-primary">
-            {balance} {originCurrency}
+            {balance ?? "0"} {originCurrency}
           </span>
           <button
             type="button"
