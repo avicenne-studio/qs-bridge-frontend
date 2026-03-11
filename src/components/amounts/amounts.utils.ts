@@ -19,7 +19,8 @@ export function formatAmountParts(value: string) {
     return { integer: "0", decimal: ".00" };
   }
 
-  const separator = value.includes(".") ? "." : ",";
+  // Always normalize to dot separator
+  const normalized = value.replace(",", ".");
 
-  return formatAmount(value, separator);
+  return formatAmount(normalized, ".");
 }

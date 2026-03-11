@@ -6,7 +6,7 @@ import { truncateAddress } from "@/utils/format";
 import { TextMorph } from "torph/react";
 import type { Address } from "viem";
 
-interface Props {
+export interface NetworkDirectionInformationProps {
   network: NetworkTagNetwork;
   walletAddress: Address;
   balance: string;
@@ -14,6 +14,8 @@ interface Props {
   currency: Currency;
   hideBalance?: boolean;
 }
+
+type Props = NetworkDirectionInformationProps;
 
 export default function NetworkDirectionInformation({
   network,

@@ -1,6 +1,7 @@
 import { ArrowDown } from "lucide-react";
 import Amount from "@/components/amounts/amount-input";
 import type { Currency } from "@/types/currency";
+import { computeReceivedAmount } from "@/utils/format";
 import FeesDropdown from "./fees-dropdown";
 
 interface Props {
@@ -9,8 +10,9 @@ interface Props {
   originCurrency: Currency;
   destinationCurrency: Currency;
   feesAmount?: string;
-  relayFeesAmount?: string;
+  relayFeesDisplay: string;
   setAmount: (amount: string) => void;
+  onRelayFeeDisplayChange?: (display: string) => void;
 }
 
 export default function BridgeAmountSection({
@@ -18,19 +20,16 @@ export default function BridgeAmountSection({
   balance,
   originCurrency,
   destinationCurrency,
-  feesAmount = "0.02",
-  relayFeesAmount = "0",
+  feesAmount = "0",
+  relayFeesDisplay,
   setAmount,
+  onRelayFeeDisplayChange,
 }: Props) {
   function setMax() {
     setAmount(balance);
   }
 
-  const formattedAmount = amount === "" ? "0" : amount;
-  const receivedAmount =
-    parseFloat(formattedAmount) - parseFloat(feesAmount) - parseFloat(relayFeesAmount);
-
-  const receivedAmountFormatted = receivedAmount < 0 ? "0" : receivedAmount.toString();
+  const receivedAmountFormatted = computeReceivedAmount(amount, feesAmount, relayFeesDisplay);
 
   return (
     <div className="flex size-full flex-col gap-8 items-center justify-center">
@@ -65,9 +64,10 @@ export default function BridgeAmountSection({
 
         <FeesDropdown
           feesAmount={feesAmount}
-          relayFeesAmount={relayFeesAmount}
+          relayFeesAmount={relayFeesDisplay}
           currency={destinationCurrency}
-          canEdit
+          canEdit={!!onRelayFeeDisplayChange}
+          onRelayFeeChange={onRelayFeeDisplayChange}
         />
       </div>
     </div>

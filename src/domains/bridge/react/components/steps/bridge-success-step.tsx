@@ -1,25 +1,31 @@
-import { ArrowDown, Plus } from "lucide-react";
+import { ArrowDown, ExternalLink, Plus } from "lucide-react";
 import type { NetworkTagNetwork } from "@/components/network-tag/network-tag";
 import NetworkDirectionInformation from "@/components/network-direction-information/network-direction-information";
-import type { ComponentProps } from "react";
+import type { NetworkDirectionInformationProps } from "@/components/network-direction-information/network-direction-information";
 import Button from "@/components/core/buttons/button/button";
 import cn from "@/utils/classnames";
 import { routes } from "@/constants/routes";
+import { truncateSignature } from "@/utils/format";
+import { computeReceivedAmount } from "@/utils/format";
 import Amount from "@/components/amounts/amount-input";
 import FeesDropdown from "../fees-dropdown";
 import BridgeDirectionSection from "../bridge-direction-section";
-
-type WalletConfig = ComponentProps<typeof NetworkDirectionInformation>;
+import OverrideOrderSection from "../override-order-section";
 
 interface Props {
   originNetwork: NetworkTagNetwork;
   destinationNetwork: NetworkTagNetwork;
-  originWalletConfig: WalletConfig;
-  destinationWalletConfig: WalletConfig;
+  originWalletConfig: NetworkDirectionInformationProps;
+  destinationWalletConfig: NetworkDirectionInformationProps;
   amount: string;
   feesAmount?: string;
   relayFeesAmount?: string;
   newBridge: () => void;
+  txSignature?: string;
+  explorerUrl?: string;
+  onOverride?: (newToAddress?: string, newFee?: string) => Promise<void>;
+  isOverriding?: boolean;
+  overrideError?: string | null;
 }
 
 export default function BridgeSuccessStep({
@@ -28,14 +34,16 @@ export default function BridgeSuccessStep({
   originWalletConfig,
   destinationWalletConfig,
   amount,
-  feesAmount = "0.02",
+  feesAmount = "0",
   relayFeesAmount = "0",
   newBridge,
+  txSignature,
+  explorerUrl,
+  onOverride,
+  isOverriding,
+  overrideError,
 }: Props) {
-  const formattedAmount = amount === "" ? "0" : amount;
-  const receivedAmount =
-    parseFloat(formattedAmount) - parseFloat(feesAmount) - parseFloat(relayFeesAmount);
-  const receivedAmountFormatted = receivedAmount < 0 ? "0" : receivedAmount.toString();
+  const receivedAmountFormatted = computeReceivedAmount(amount, feesAmount, relayFeesAmount);
 
   const originCurrency = originWalletConfig.currency;
   const destinationCurrency = destinationWalletConfig.currency;
@@ -81,7 +89,38 @@ export default function BridgeSuccessStep({
                   currency={destinationCurrency}
                 />
               </div>
+
+              {txSignature && (
+                <div className="flex w-full flex-col gap-2 border-t border-border pt-4">
+                  <span className="text-xs text-primary">Transaction</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-primary">
+                      {truncateSignature(txSignature)}
+                    </span>
+                    {explorerUrl && (
+                      <a
+                        href={explorerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80"
+                        aria-label="View transaction on explorer"
+                      >
+                        <ExternalLink size={14} aria-hidden />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* TODO: remove OverrideOrderSection when no longer needed */}
+            {onOverride && (
+              <OverrideOrderSection
+                onOverride={onOverride}
+                isOverriding={isOverriding}
+                overrideError={overrideError}
+              />
+            )}
           </div>
 
           <div
