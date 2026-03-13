@@ -68,19 +68,15 @@ export function useBridge() {
   const handleOverride = async (newToAddress?: string, newFee?: string) => {
     if (!bridge.lastOrder) return;
 
-    try {
-      const overrideToAddress = newToAddress ? qubicIdentityToBytes(newToAddress) : null;
-      const overrideFee = newFee ? displayToRaw(newFee) : null;
+    const overrideToAddress = newToAddress ? qubicIdentityToBytes(newToAddress) : null;
+    const overrideFee = newFee ? displayToRaw(newFee) : null;
 
-      await bridge.overrideOutbound({
-        networkOut: bridge.lastOrder.networkOut,
-        nonce: bridge.lastOrder.nonce,
-        newToAddress: overrideToAddress,
-        newRelayerFee: overrideFee,
-      });
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Override failed");
-    }
+    await bridge.overrideOutbound({
+      networkOut: bridge.lastOrder.networkOut,
+      nonce: bridge.lastOrder.nonce,
+      newToAddress: overrideToAddress,
+      newRelayerFee: overrideFee,
+    });
   };
 
   const handleNewBridge = () => {
