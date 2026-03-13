@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { ChevronDown, ChevronUp, Edit, Info } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import Tooltip from "@/components/ui/tooltip";
@@ -22,15 +22,14 @@ export default function FeesDropdown({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(relayFeesAmount);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (editing) inputRef.current?.focus();
-  }, [editing]);
+  const autoFocusRef = useCallback((node: HTMLInputElement | null) => {
+    if (node !== null) node.focus();
+  }, []);
 
-  useEffect(() => {
-    if (!editing) setEditValue(relayFeesAmount);
-  }, [relayFeesAmount, editing]);
+  if (!editing && editValue !== relayFeesAmount) {
+    setEditValue(relayFeesAmount);
+  }
 
   const totalFees = (parseFloat(feesAmount) + parseFloat(relayFeesAmount)).toString();
 
@@ -112,7 +111,7 @@ export default function FeesDropdown({
               {editing ? (
                 <div className="flex items-center gap-2">
                   <input
-                    ref={inputRef}
+                    ref={autoFocusRef}
                     type="text"
                     inputMode="decimal"
                     value={editValue}

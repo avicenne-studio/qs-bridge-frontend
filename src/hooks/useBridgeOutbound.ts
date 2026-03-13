@@ -19,6 +19,7 @@ import type { OutboundParams, OverrideOutboundParams, TxResult } from "@/lib/bri
 
 const WQUBIC_MINT_ADDRESS = import.meta.env.VITE_WQUBIC_MINT_ADDRESS;
 if (!WQUBIC_MINT_ADDRESS) throw new Error("VITE_WQUBIC_MINT_ADDRESS is not set");
+
 const WQUBIC_MINT = new PublicKey(WQUBIC_MINT_ADDRESS);
 
 function generateNonce(): Uint8Array {
