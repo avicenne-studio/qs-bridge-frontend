@@ -10,8 +10,16 @@ export function displayToRaw(display: string): bigint {
 }
 
 export function computeProgramFees(amount: string): string {
-  const amountNum = parseFloat(amount) || 0;
-  const oracleFee = (amountNum * BPS_FEE) / 10_000;
-  const protocolFee = (oracleFee * PROTOCOL_FEE_BPS_OF_BPS) / 10_000;
-  return (oracleFee + protocolFee).toString();
+  const raw = displayToRaw(amount);
+  const oracleFee = (raw * BigInt(BPS_FEE)) / 10_000n;
+  const protocolFee = (oracleFee * BigInt(PROTOCOL_FEE_BPS_OF_BPS)) / 10_000n;
+  return rawToDisplay(oracleFee + protocolFee);
+}
+
+function rawToDisplay(raw: bigint): string {
+  const whole = raw / DECIMALS_FACTOR;
+  const frac = raw % DECIMALS_FACTOR;
+  if (frac === 0n) return whole.toString();
+  const fracStr = frac.toString().padStart(WQUBIC_DECIMALS, "0").replace(/0+$/, "");
+  return `${whole}.${fracStr}`;
 }

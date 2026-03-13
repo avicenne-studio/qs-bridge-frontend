@@ -7,6 +7,7 @@ interface Props {
   overrideError?: string | null;
 }
 
+// TODO: temporary placement and UI — only here for testing purposes
 export default function OverrideOrderSection({ onOverride, isOverriding, overrideError }: Props) {
   const [show, setShow] = useState(false);
   const [toAddress, setToAddress] = useState("");
@@ -56,6 +57,7 @@ export default function OverrideOrderSection({ onOverride, isOverriding, overrid
           label="Override"
           action={handleOverride}
           isLoading={isOverriding}
+          isDisabled={!toAddress.trim() && !relayerFee.trim()}
           isFullWidth
         />
       </div>

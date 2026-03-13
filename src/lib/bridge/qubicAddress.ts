@@ -9,6 +9,7 @@ export function qubicIdentityToBytes(identity: string): Uint8Array {
   const view = new DataView(bytes.buffer);
   const charCodeA = "A".charCodeAt(0);
 
+  // 4 groups × 14 data chars = 56 chars; last 4 chars are checksum (not part of the public key)
   for (let i = 0; i < 4; i++) {
     view.setBigUint64(i * 8, 0n, true);
     for (let j = 14; j-- > 0; ) {
