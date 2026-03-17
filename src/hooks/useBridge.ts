@@ -143,5 +143,7 @@ export function useBridge() {
     lastOrder: bridge.lastOrder,
     isOverriding: bridge.isLoading,
     overrideError: bridge.overrideError,
+    solanaConnected: solanaWallet.connected,
+    qubicConnected: qubicWallet.connected,
   };
 }
