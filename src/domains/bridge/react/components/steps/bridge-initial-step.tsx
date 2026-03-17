@@ -4,28 +4,32 @@ import type { NetworkTagNetwork } from "@/components/network-tag/network-tag";
 import BridgeAmountSection from "../bridge-amount-section";
 import BridgeDirectionSection from "../bridge-direction-section";
 import NetworkDirectionInformation from "@/components/network-direction-information/network-direction-information";
-import type { ComponentProps } from "react";
+import type { NetworkDirectionInformationProps } from "@/components/network-direction-information/network-direction-information";
 import Button from "@/components/core/buttons/button/button";
 import cn from "@/utils/classnames";
-
-type WalletConfig = ComponentProps<typeof NetworkDirectionInformation>;
 
 interface Props {
   bridgeAmount: string;
   setBridgeAmount: (amount: string) => void;
+  relayFeeDisplay: string;
+  onRelayFeeDisplayChange: (display: string) => void;
   originNetwork: NetworkTagNetwork;
   destinationNetwork: NetworkTagNetwork;
   onSwitchDirection: () => void;
   onBridge: () => void;
   isBridging: boolean;
-  originWalletConfig: WalletConfig;
-  destinationWalletConfig: WalletConfig;
+  originWalletConfig: NetworkDirectionInformationProps;
+  destinationWalletConfig: NetworkDirectionInformationProps;
   feesAmount: string;
+  error: string | null;
+  isSolanaToQubic: boolean;
 }
 
 export default function BridgeInitialStep({
   bridgeAmount,
   setBridgeAmount,
+  relayFeeDisplay,
+  onRelayFeeDisplayChange,
   originNetwork,
   destinationNetwork,
   onSwitchDirection,
@@ -34,6 +38,8 @@ export default function BridgeInitialStep({
   originWalletConfig,
   destinationWalletConfig,
   feesAmount,
+  error,
+  isSolanaToQubic,
 }: Props) {
   return (
     <>
@@ -57,8 +63,10 @@ export default function BridgeInitialStep({
               originCurrency={originWalletConfig.currency}
               destinationCurrency={destinationWalletConfig.currency}
               feesAmount={feesAmount}
+              relayFeesDisplay={relayFeeDisplay}
               amount={bridgeAmount}
               setAmount={setBridgeAmount}
+              onRelayFeeDisplayChange={isSolanaToQubic ? onRelayFeeDisplayChange : undefined}
             />
           </div>
 
@@ -96,11 +104,15 @@ export default function BridgeInitialStep({
         icon={ShieldCheck}
       />
 
+      {error && (
+        <div className="w-full rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+      )}
+
       <div className="w-full grid grid-cols-2 gap-10">
         <span className="col-span-1 col-start-2">
           <Button
             variant="default"
-            label="Bridge"
+            label={isSolanaToQubic ? "Bridge" : "Bridge (coming soon)"}
             action={onBridge}
             isFullWidth
             isLoading={isBridging}

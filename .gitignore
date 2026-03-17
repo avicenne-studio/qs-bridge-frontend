@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 storybook-static
+
+# Agents
+.agents
+.claude
+skills-lock.json

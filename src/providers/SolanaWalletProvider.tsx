@@ -3,18 +3,16 @@ import { createAppKit } from "@reown/appkit/react";
 import { SolanaAdapter } from "@reown/appkit-adapter-solana/react";
 import { solana, solanaDevnet } from "@reown/appkit/networks";
 import { useAppKitAccount } from "@reown/appkit/react";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { formatCompactNumber } from "@/utils/format";
+import { solanaConnection } from "@/lib/bridge/solana/connection";
+import { TOKEN_PROGRAM_ID } from "@/lib/bridge/solana/constants";
 
-const SOLANA_RPC_URL = import.meta.env.VITE_SOLANA_RPC_URL as string;
 const WQUBIC_MINT_ADDRESS = import.meta.env.VITE_WQUBIC_MINT_ADDRESS as string;
 const REOWN_PROJECT_ID = import.meta.env.VITE_REOWN_PROJECT_ID as string;
 
 const BALANCE_REFRESH_INTERVAL_MS = 30_000;
 const WQUBIC_MINT = new PublicKey(WQUBIC_MINT_ADDRESS);
-const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-
-const solanaConnection = new Connection(SOLANA_RPC_URL);
 
 // Initialize Reown AppKit (must be called at module level, outside React)
 createAppKit({
