@@ -1,53 +1,37 @@
 import { ArrowDown, ShieldCheck } from "lucide-react";
 import Callout from "@/components/callout/callout";
-import type { NetworkTagNetwork } from "@/components/network-tag/network-tag";
 import BridgeAmountSection from "../bridge-amount-section";
 import BridgeDirectionSection from "../bridge-direction-section";
 import NetworkDirectionInformation from "@/components/network-direction-information/network-direction-information";
-import type { NetworkDirectionInformationProps } from "@/components/network-direction-information/network-direction-information";
 import Button from "@/components/core/buttons/button/button";
 import cn from "@/utils/classnames";
+import { useBridgeContext } from "@/domains/bridge/bridge.context";
 
-interface Props {
-  bridgeAmount: string;
-  setBridgeAmount: (amount: string) => void;
-  relayFeeDisplay: string;
-  onRelayFeeDisplayChange: (display: string) => void;
-  originNetwork: NetworkTagNetwork;
-  destinationNetwork: NetworkTagNetwork;
-  onSwitchDirection: () => void;
-  onBridge: () => void;
-  isBridging: boolean;
-  originWalletConfig: NetworkDirectionInformationProps;
-  destinationWalletConfig: NetworkDirectionInformationProps;
-  feesAmount: string;
-  error: string | null;
-  isSolanaToQubic: boolean;
-}
+export default function BridgeInitialStep() {
+  const {
+    bridgeAmount,
+    setBridgeAmount,
+    relayFeeDisplay,
+    setRelayFeeDisplay,
+    originNetwork,
+    destinationNetwork,
+    isSolanaToQubic,
+    switchDirection,
+    handleBridge,
+    isBridging,
+    originWalletConfig,
+    destinationWalletConfig,
+    totalProgramFees,
+    error,
+  } = useBridgeContext();
 
-export default function BridgeInitialStep({
-  bridgeAmount,
-  setBridgeAmount,
-  relayFeeDisplay,
-  onRelayFeeDisplayChange,
-  originNetwork,
-  destinationNetwork,
-  onSwitchDirection,
-  onBridge,
-  isBridging,
-  originWalletConfig,
-  destinationWalletConfig,
-  feesAmount,
-  error,
-  isSolanaToQubic,
-}: Props) {
   return (
     <>
       <div className="grid grid-cols-2 gap-10">
         <BridgeDirectionSection
           originNetwork={originNetwork}
           destinationNetwork={destinationNetwork}
-          onSwitchDirection={onSwitchDirection}
+          onSwitchDirection={switchDirection}
         />
 
         <div className="col-span-2 grid grid-cols-2 gap-10">
@@ -62,11 +46,11 @@ export default function BridgeInitialStep({
               balance={originWalletConfig.balance}
               originCurrency={originWalletConfig.currency}
               destinationCurrency={destinationWalletConfig.currency}
-              feesAmount={feesAmount}
+              feesAmount={totalProgramFees}
               relayFeesDisplay={relayFeeDisplay}
               amount={bridgeAmount}
               setAmount={setBridgeAmount}
-              onRelayFeeDisplayChange={isSolanaToQubic ? onRelayFeeDisplayChange : undefined}
+              onRelayFeeDisplayChange={isSolanaToQubic ? setRelayFeeDisplay : undefined}
             />
           </div>
 
@@ -113,7 +97,7 @@ export default function BridgeInitialStep({
           <Button
             variant="default"
             label={isSolanaToQubic ? "Bridge" : "Bridge (coming soon)"}
-            action={onBridge}
+            action={handleBridge}
             isFullWidth
             isLoading={isBridging}
           />

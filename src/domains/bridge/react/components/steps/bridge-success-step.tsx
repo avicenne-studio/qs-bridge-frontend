@@ -1,7 +1,5 @@
 import { ArrowDown, ExternalLink, Plus } from "lucide-react";
-import type { NetworkTagNetwork } from "@/components/network-tag/network-tag";
 import NetworkDirectionInformation from "@/components/network-direction-information/network-direction-information";
-import type { NetworkDirectionInformationProps } from "@/components/network-direction-information/network-direction-information";
 import Button from "@/components/core/buttons/button/button";
 import cn from "@/utils/classnames";
 import { routes } from "@/constants/routes";
@@ -11,40 +9,26 @@ import Amount from "@/components/amounts/amount-input";
 import FeesDropdown from "../fees-dropdown";
 import BridgeDirectionSection from "../bridge-direction-section";
 import OverrideOrderSection from "../override-order-section";
+import { useBridgeContext } from "@/domains/bridge/bridge.context";
 
-interface Props {
-  originNetwork: NetworkTagNetwork;
-  destinationNetwork: NetworkTagNetwork;
-  originWalletConfig: NetworkDirectionInformationProps;
-  destinationWalletConfig: NetworkDirectionInformationProps;
-  amount: string;
-  feesAmount?: string;
-  relayFeesAmount?: string;
-  newBridge: () => void;
-  txSignature?: string;
-  explorerUrl?: string;
-  onOverride?: (newToAddress?: string, newFee?: string) => Promise<void>;
-  isOverriding?: boolean;
-  overrideError?: string | null;
-}
+export default function BridgeSuccessStep() {
+  const {
+    originNetwork,
+    destinationNetwork,
+    originWalletConfig,
+    destinationWalletConfig,
+    bridgeAmount,
+    totalProgramFees: feesAmount,
+    relayFeeDisplay: relayFeesAmount,
+    handleNewBridge,
+    txResult,
+    lastOrder,
+    handleOverride,
+    isOverriding,
+    overrideError,
+  } = useBridgeContext();
 
-export default function BridgeSuccessStep({
-  originNetwork,
-  destinationNetwork,
-  originWalletConfig,
-  destinationWalletConfig,
-  amount,
-  feesAmount = "0",
-  relayFeesAmount = "0",
-  newBridge,
-  txSignature,
-  explorerUrl,
-  onOverride,
-  isOverriding,
-  overrideError,
-}: Props) {
-  const receivedAmountFormatted = computeReceivedAmount(amount, feesAmount, relayFeesAmount);
-
+  const receivedAmountFormatted = computeReceivedAmount(bridgeAmount, feesAmount, relayFeesAmount);
   const originCurrency = originWalletConfig.currency;
   const destinationCurrency = destinationWalletConfig.currency;
 
@@ -70,7 +54,7 @@ export default function BridgeSuccessStep({
                   Order successfully placed
                 </label>
 
-                <Amount amount={amount} currency={originCurrency} />
+                <Amount amount={bridgeAmount} currency={originCurrency} />
               </div>
 
               <ArrowDown
@@ -90,16 +74,16 @@ export default function BridgeSuccessStep({
                 />
               </div>
 
-              {txSignature && (
+              {txResult?.signature && (
                 <div className="flex w-full flex-col gap-2 border-t border-border pt-4">
                   <span className="text-xs text-primary">Transaction</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs text-primary">
-                      {truncateSignature(txSignature)}
+                      {truncateSignature(txResult.signature)}
                     </span>
-                    {explorerUrl && (
+                    {txResult.explorerUrl && (
                       <a
-                        href={explorerUrl}
+                        href={txResult.explorerUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:text-primary/80"
@@ -114,9 +98,9 @@ export default function BridgeSuccessStep({
             </div>
 
             {/* TODO: remove OverrideOrderSection when no longer needed */}
-            {onOverride && (
+            {lastOrder && (
               <OverrideOrderSection
-                onOverride={onOverride}
+                onOverride={handleOverride}
                 isOverriding={isOverriding}
                 overrideError={overrideError}
               />
@@ -167,7 +151,7 @@ export default function BridgeSuccessStep({
           variant="default"
           label="New Bridge"
           icon={<Plus size={16} />}
-          action={newBridge}
+          action={handleNewBridge}
           isFullWidth
         />
       </div>
