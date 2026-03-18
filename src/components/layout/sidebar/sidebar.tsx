@@ -5,6 +5,8 @@ import QubicBridgeLogomark from "@/components/core/assets/qubic-bridge-logomark"
 import StatusSection from "./components/status/status-section";
 import SidebarLink from "./components/sidebar-link";
 import Button from "@/components/core/buttons/button/button";
+import { useModalStore } from "@/stores/modal-store";
+import { ModalType } from "@/types/modal";
 import cn from "@/utils/classnames";
 
 const navItems = [
@@ -14,6 +16,8 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  const { openModal } = useModalStore();
+
   return (
     <aside className={cn("w-[300px] h-full shrink-0 flex-col bg-white", "hidden xl:flex")}>
       <NavLink
@@ -36,6 +40,14 @@ export default function Sidebar() {
           path={routes.bridge.path}
           isInternalLink
           isFullWidth
+        />
+
+        {/* TODO: remove this after new modal integration */}
+        <Button
+          variant="default"
+          label="Open test modal"
+          isFullWidth
+          action={() => openModal(ModalType.test)}
         />
       </div>
 
