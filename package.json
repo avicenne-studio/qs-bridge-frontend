@@ -73,6 +73,7 @@
     "vitest": "^4.0.18"
   },
   "optionalDependencies": {
-    "@noble/hashes": "^2.0.1"
+    "@noble/hashes": "^2.0.1",
+    "utf-8-validate": "^5.0.10"
   }
 }
