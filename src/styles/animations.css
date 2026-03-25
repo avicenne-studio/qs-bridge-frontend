@@ -38,22 +38,6 @@
   }
 }
 
-/* ─── Animation classes ─────────────────────────────────────── */
-
-.animate-modal-overlay-in {
-  animation: modal-overlay-in 200ms ease both;
-}
-.animate-modal-overlay-out {
-  animation: modal-overlay-out 200ms ease both;
-}
-
-.animate-modal-content-in {
-  animation: modal-content-in 200ms ease both;
-}
-.animate-modal-content-out {
-  animation: modal-content-out 200ms ease both;
-}
-
 /* ─── Radix data-state bindings ─────────────────────────────── */
 
 [data-state="open"] > .modal-overlay,

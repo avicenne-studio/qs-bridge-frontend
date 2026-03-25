@@ -26,7 +26,7 @@ function ModalContent() {
   return (
     <div className="w-full h-fit max-w-[500px] rounded-3xl bg-primary p-6 flex flex-col">
       <div className="flex w-full justify-between items-center">
-        <span className="text-white text-2xl font-semibold">{title}</span>
+        <Dialog.Title className="text-white text-2xl font-semibold">{title}</Dialog.Title>
         <button
           onClick={closeModal}
           className={cn(
@@ -55,7 +55,6 @@ export default function ModalProvider() {
       <Dialog.Portal>
         <Dialog.Overlay
           className={cn("modal-overlay", "fixed inset-0 z-50 bg-black/40 backdrop-blur-[5px]")}
-          onClick={closeModal}
         />
         <Dialog.Content
           className={cn(
