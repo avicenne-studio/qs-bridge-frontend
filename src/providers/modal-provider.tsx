@@ -1,22 +1,25 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useModalStore } from "@/stores/modal-store";
 import { ModalType } from "@/types/modal";
-import TestModal from "../components/modals/test-modal";
+import type { ModalData } from "@/types/modal";
+import OverrideOrderModal from "../components/modals/override-order-modal";
 import type { ReactNode } from "react";
 import cn from "@/utils/classnames";
 import { X } from "lucide-react";
 
 function ModalContent() {
-  const { modalType, closeModal } = useModalStore();
+  const { modalState, closeModal } = useModalStore();
 
   let content: ReactNode | null;
   let title: string | null;
 
-  switch (modalType) {
-    case ModalType.test:
-      title = "Test modal";
-      content = <TestModal />;
+  switch (modalState?.type) {
+    case ModalType.overrideOrder: {
+      const data = modalState.data as ModalData<"overrideOrder">;
+      title = "Override Order";
+      content = <OverrideOrderModal {...data} />;
       break;
+    }
 
     default:
       title = null;

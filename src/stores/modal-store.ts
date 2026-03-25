@@ -1,16 +1,17 @@
 import { create } from "zustand";
-import type { ModalType } from "@/types/modal";
+import type { ModalType, ModalData, ModalState } from "@/types/modal";
 
 interface ModalStore {
   showModal: boolean;
-  modalType: ModalType | null;
-  openModal: (type: ModalType) => void;
+  modalState: ModalState<ModalType> | null;
+  openModal: <T extends ModalType>(type: T, data?: ModalData<T>) => void;
   closeModal: () => void;
 }
 
 export const useModalStore = create<ModalStore>((set) => ({
   showModal: false,
-  modalType: null,
-  openModal: (modalType) => set({ showModal: true, modalType }),
-  closeModal: () => set({ showModal: false }),
+  modalState: null,
+  openModal: (type, data) =>
+    set({ showModal: true, modalState: { type, data } as ModalState<ModalType> }),
+  closeModal: () => set({ showModal: false, modalState: null }),
 }));

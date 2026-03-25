@@ -54,9 +54,6 @@ export default function BridgePage() {
           newBridge={bridge.handleNewBridge}
           txSignature={bridge.txResult?.signature}
           explorerUrl={bridge.txResult?.explorerUrl}
-          onOverride={bridge.lastOrder ? bridge.handleOverride : undefined}
-          isOverriding={bridge.isOverriding}
-          overrideError={bridge.overrideError}
         />
       )}
     </div>

@@ -9,6 +9,8 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "100",
     date: "2024-01-15",
+    nonce: new Uint8Array(32).fill(1),
+    networkOut: 1,
   },
   {
     status: "finalized",
@@ -18,6 +20,8 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "250",
     date: "2024-01-16",
+    nonce: new Uint8Array(32).fill(2),
+    networkOut: 1,
   },
   {
     status: "finalized",
@@ -27,6 +31,8 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "50",
     date: "2024-01-17",
+    nonce: new Uint8Array(32).fill(3),
+    networkOut: 1,
   },
   {
     status: "failed",
@@ -36,6 +42,8 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "75",
     date: "2024-01-18",
+    nonce: new Uint8Array(32).fill(4),
+    networkOut: 1,
   },
   {
     status: "finalized",
@@ -45,6 +53,8 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "1200",
     date: "2024-01-19",
+    nonce: new Uint8Array(32).fill(5),
+    networkOut: 1,
   },
   {
     status: "finalized",
@@ -54,6 +64,8 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "330",
     date: "2024-01-20",
+    nonce: new Uint8Array(32).fill(6),
+    networkOut: 1,
   },
   {
     status: "finalized",
@@ -63,6 +75,8 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "89",
     date: "2024-01-21",
+    nonce: new Uint8Array(32).fill(7),
+    networkOut: 1,
   },
   {
     status: "finalized",
@@ -72,6 +86,8 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "445",
     date: "2024-01-22",
+    nonce: new Uint8Array(32).fill(8),
+    networkOut: 1,
   },
   {
     status: "finalized",
@@ -81,6 +97,8 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "210",
     date: "2024-01-23",
+    nonce: new Uint8Array(32).fill(9),
+    networkOut: 1,
   },
   {
     status: "finalized",
@@ -90,5 +108,7 @@ export const MOCKED_HISTORY_DATA: HistoryRow[] = [
     to: "0x1871cc41d26b901cbd9e49d6d5230a197268cb84be727f9e6b4243bdf0200b7b",
     amount: "67",
     date: "2024-01-24",
+    nonce: new Uint8Array(32).fill(10),
+    networkOut: 1,
   },
 ];

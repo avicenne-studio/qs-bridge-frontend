@@ -10,7 +10,6 @@ import { computeReceivedAmount } from "@/utils/format";
 import Amount from "@/components/amounts/amount-input";
 import FeesDropdown from "../fees-dropdown";
 import BridgeDirectionSection from "../bridge-direction-section";
-import OverrideOrderSection from "../override-order-section";
 
 interface Props {
   originNetwork: NetworkTagNetwork;
@@ -23,9 +22,6 @@ interface Props {
   newBridge: () => void;
   txSignature?: string;
   explorerUrl?: string;
-  onOverride?: (newToAddress?: string, newFee?: string) => Promise<void>;
-  isOverriding?: boolean;
-  overrideError?: string | null;
 }
 
 export default function BridgeSuccessStep({
@@ -39,9 +35,6 @@ export default function BridgeSuccessStep({
   newBridge,
   txSignature,
   explorerUrl,
-  onOverride,
-  isOverriding,
-  overrideError,
 }: Props) {
   const receivedAmountFormatted = computeReceivedAmount(amount, feesAmount, relayFeesAmount);
 
@@ -112,15 +105,6 @@ export default function BridgeSuccessStep({
                 </div>
               )}
             </div>
-
-            {/* TODO: remove OverrideOrderSection when no longer needed */}
-            {onOverride && (
-              <OverrideOrderSection
-                onOverride={onOverride}
-                isOverriding={isOverriding}
-                overrideError={overrideError}
-              />
-            )}
           </div>
 
           <div
