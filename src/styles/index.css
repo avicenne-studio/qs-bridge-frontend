@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./colors.css";
+@import "./animations.css";
 
 :root {
   font-family: "Poppins", system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -24,7 +25,7 @@ body {
   min-height: 100vh;
 }
 
-/* CellHead sort icon: 
+/* CellHead sort icon:
 ArrowUpDown has 4 paths. Paths 1-2 = down arrow, 3-4 = up arrow. stroke for color. */
 [data-sort="none"] path {
   stroke: #b2b2b2;
