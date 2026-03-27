@@ -27,5 +27,11 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    server: {
+      deps: {
+        // Let Node load qubic-js natively (CJS + WASM) instead of going through Vite's ESM transform
+        external: [/@ardata-tech\/qubic-js/, /@qubic-lib/],
+      },
+    },
   },
 });
