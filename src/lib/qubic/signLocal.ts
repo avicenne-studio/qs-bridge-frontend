@@ -1,4 +1,3 @@
-import cryptoPromise from "@ardata-tech/qubic-js/dist/crypto";
 import { hexToBytes } from "../qubicIdentity";
 
 type SchnorrQ = {
@@ -15,6 +14,14 @@ let resolvedCrypto: CryptoModule | null = null;
 
 async function getCrypto(): Promise<CryptoModule> {
   if (!resolvedCrypto) {
+    const mod = await import("@ardata-tech/qubic-js/dist/crypto");
+    const modAny = mod as any;
+    const cryptoPromise: Promise<CryptoModule> =
+      modAny.default instanceof Promise
+        ? modAny.default
+        : modAny.default?.default instanceof Promise
+          ? modAny.default.default
+          : Promise.resolve(modAny.default ?? modAny);
     resolvedCrypto = await cryptoPromise;
   }
 
