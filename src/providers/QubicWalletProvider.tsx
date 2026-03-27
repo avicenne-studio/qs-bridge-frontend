@@ -12,8 +12,11 @@ import { connectViaWalletConnect, disconnectWC } from "@/lib/qubic/connectWallet
 import { connectViaMetaMask } from "@/lib/qubic/connectMetaMask";
 import { connectViaSeed } from "@/lib/qubic/connectSeed";
 import { connectViaVaultFile } from "@/lib/qubic/connectVault";
+import { signMessageLocally } from "@/lib/qubic/signLocal";
 import { useQubicSignClient } from "@/hooks/useQubicSignClient";
 import { useWCBalancePolling, useLocalBalancePolling } from "@/hooks/useBalancePolling";
+import { QUBIC_CHAIN_ID } from "@/lib/qubicWallet";
+import { bytesToHex, hexToBytes } from "@/lib/qubicIdentity";
 import type { Address } from "viem";
 
 export type { QubicAccount, QubicSession, ConnectionMethod };
@@ -36,6 +39,7 @@ export interface QubicWalletState {
   connectWithSeed: (seed: string) => Promise<void>;
   connectWithVaultFile: (file: File, password: string) => Promise<void>;
   disconnect: () => Promise<void>;
+  signMessage: (data: Uint8Array) => Promise<Uint8Array>;
 }
 
 const QubicWalletContext = createContext<QubicWalletState | null>(null);
@@ -173,6 +177,25 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     }
   }
 
+  async function handleSignMessage(data: Uint8Array): Promise<Uint8Array> {
+    const s = sessionRef.current;
+    if (!s) throw new Error("Not connected");
+
+    if (s.kind === "local") {
+      if (!s.privateKeyHex) throw new Error("No private key available for this connection method");
+      return signMessageLocally(data, s.privateKeyHex);
+    }
+
+    const client = getClient();
+    if (!client) throw new Error("WalletConnect client not ready");
+    const result = await client.request<string>({
+      topic: s.topic,
+      chainId: QUBIC_CHAIN_ID,
+      request: { method: "qubic_sign", params: [bytesToHex(data)] },
+    });
+    return hexToBytes(result);
+  }
+
   async function handleDisconnect() {
     try {
       const s = sessionRef.current;
@@ -205,6 +228,7 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     connectWithSeed: handleConnectWithSeed,
     connectWithVaultFile: handleConnectWithVaultFile,
     disconnect: handleDisconnect,
+    signMessage: handleSignMessage,
   };
 
   return <QubicWalletContext.Provider value={value}>{children}</QubicWalletContext.Provider>;
