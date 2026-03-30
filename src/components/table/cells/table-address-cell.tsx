@@ -1,19 +1,36 @@
 import Tooltip from "@/components/ui/tooltip";
 import { truncateAddress } from "@/utils/format";
-import type { Address } from "viem";
+import { ExternalLink } from "lucide-react";
 import CellLayout from "./cell-layout";
+import type { Chain } from "@/domains/activity/activity.types";
 
-interface Props {
-  address: Address;
+function getExplorerUrl(address: string, chain: Chain): string {
+  if (chain === "solana") {
+    return `https://solscan.io/account/${address}?cluster=devnet`;
+  }
+  return `https://explorer.qubic.org/network/address/${address}`;
 }
 
-export default function TableAddressCell({ address }: Props) {
+interface Props {
+  address: string;
+  chain: Chain;
+}
+
+export default function TableAddressCell({ address, chain }: Props) {
+  const explorerUrl = getExplorerUrl(address, chain);
+
   return (
     <CellLayout type="td">
       <Tooltip content={address}>
-        <span className="cursor-default underline decoration-dotted underline-offset-2">
+        <a
+          href={explorerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 hover:text-primary/70"
+        >
           {truncateAddress(address)}
-        </span>
+          <ExternalLink size={12} className="shrink-0" aria-hidden />
+        </a>
       </Tooltip>
     </CellLayout>
   );

@@ -2,10 +2,12 @@ import cn from "@/utils/classnames";
 import BridgeInitialStep from "./components/steps/bridge-initial-step";
 import BridgeSuccessStep from "./components/steps/bridge-success-step";
 import { useBridge } from "@/hooks/useBridge";
+import { useBridgeHealthContext } from "@/providers/BridgeHealthProvider";
 import NoWalletConnectedPanel from "@/components/no-wallet-connected-panel";
 
 export default function BridgePage() {
   const bridge = useBridge();
+  const { isPaused } = useBridgeHealthContext();
 
   const walletsConnectedPanelLabel =
     !bridge.solanaConnected && !bridge.qubicConnected
@@ -23,6 +25,12 @@ export default function BridgePage() {
 
   return (
     <div className={cn("flex w-full flex-col gap-10", "p-0 py-8 xl:p-8")}>
+      {isPaused && (
+        <div className="w-full rounded-lg bg-yellow-50 border border-yellow-200 px-4 py-3 text-sm text-yellow-800">
+          The bridge is currently paused. Transactions are temporarily disabled.
+        </div>
+      )}
+
       {bridge.currentBridgeStep === "initial" && (
         <BridgeInitialStep
           bridgeAmount={bridge.bridgeAmount}
@@ -39,6 +47,7 @@ export default function BridgePage() {
           feesAmount={bridge.totalProgramFees}
           error={bridge.error}
           isSolanaToQubic={bridge.isSolanaToQubic}
+          isPaused={isPaused}
         />
       )}
 
@@ -53,10 +62,12 @@ export default function BridgePage() {
           relayFeesAmount={bridge.relayFeeDisplay}
           newBridge={bridge.handleNewBridge}
           txSignature={bridge.txResult?.signature}
-          explorerUrl={bridge.txResult?.explorerUrl}
           onOverride={bridge.lastOrder ? bridge.handleOverride : undefined}
           isOverriding={bridge.isOverriding}
           overrideError={bridge.overrideError}
+          orderStatus={bridge.orderStatus}
+          destinationTrxHash={bridge.destinationTrxHash}
+          isTrackingOrder={bridge.isTrackingOrder}
         />
       )}
     </div>

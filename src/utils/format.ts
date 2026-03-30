@@ -1,6 +1,4 @@
-import type { Address } from "viem";
-
-export function truncateAddress(address: Address | null) {
+export function truncateAddress(address: string | null) {
   if (!address) return "—";
 
   if (address.length <= 10) return address;

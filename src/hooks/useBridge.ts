@@ -7,7 +7,9 @@ import useSolanaWallet from "@/hooks/useSolanaWallet";
 import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import { useBridgeOutbound } from "@/hooks/useBridgeOutbound";
 import { qubicIdentityToBytes } from "@/lib/bridge/qubicAddress";
-import { displayToRaw, computeProgramFees } from "@/lib/bridge/amounts";
+import { displayToRaw } from "@/lib/bridge/amounts";
+import { useFeeEstimate } from "@/hooks/useFeeEstimate";
+import { useOrderTracking } from "@/hooks/useOrderTracking";
 
 export type BridgeSteps = "initial" | "successful";
 
@@ -23,6 +25,19 @@ export function useBridge() {
   const solanaWallet = useSolanaWallet();
   const qubicWallet = useQubicWallet();
   const bridge = useBridgeOutbound();
+
+  const {
+    orderStatus,
+    destinationTrxHash,
+    isPolling: isTrackingOrder,
+  } = useOrderTracking(bridge.txResult?.signature ?? null);
+
+  const { estimate, isEstimating, estimateError } = useFeeEstimate(
+    originNetwork,
+    bridgeAmount,
+    solanaWallet.address ?? null,
+    (qubicWallet.address as string) ?? null,
+  );
 
   const isSolanaToQubic = originNetwork === NETWORK.Solana;
   const destinationNetwork = isSolanaToQubic ? NETWORK.Qubic : NETWORK.Solana;
@@ -58,6 +73,7 @@ export function useBridge() {
       amount: displayToRaw(bridgeAmount),
       toAddress,
       relayerFee: displayToRaw(relayFeeDisplay),
+      orderEra: 0,
     });
 
     if (result) {
@@ -119,13 +135,14 @@ export function useBridge() {
         direction: "destination",
       };
 
-  const totalProgramFees = computeProgramFees(bridgeAmount);
+  const totalProgramFees = estimate?.totalBridgeFee ?? "0";
+  const estimatedRelayFee = estimate?.relayerFee ?? DEFAULT_RELAYER_FEE_DISPLAY;
 
   return {
     currentBridgeStep,
     bridgeAmount,
     setBridgeAmount,
-    relayFeeDisplay,
+    relayFeeDisplay: estimate ? estimatedRelayFee : relayFeeDisplay,
     setRelayFeeDisplay,
     originNetwork,
     destinationNetwork,
@@ -138,12 +155,17 @@ export function useBridge() {
     destinationWalletConfig,
     totalProgramFees,
     isBridging: bridge.isLoading,
-    error: localError ?? bridge.outboundError,
+    isEstimating,
+    error: localError ?? bridge.outboundError ?? estimateError,
     txResult: bridge.txResult,
     lastOrder: bridge.lastOrder,
     isOverriding: bridge.isLoading,
     overrideError: bridge.overrideError,
     solanaConnected: solanaWallet.connected,
     qubicConnected: qubicWallet.connected,
+    estimate,
+    orderStatus,
+    destinationTrxHash,
+    isTrackingOrder,
   };
 }

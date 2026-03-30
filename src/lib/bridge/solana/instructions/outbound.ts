@@ -11,10 +11,11 @@ interface SerializeOutboundArgs {
   amount: bigint; // u64
   relayerFee: bigint; // u64
   nonce: Uint8Array; // 32 bytes
+  orderEra: number; // u32
 }
 
 export function serializeOutboundData(args: SerializeOutboundArgs): Buffer {
-  const buf = Buffer.alloc(117);
+  const buf = Buffer.alloc(121);
   let offset = 0;
 
   buf.writeUInt8(OUTBOUND_DISCRIMINATOR, offset);
@@ -36,6 +37,9 @@ export function serializeOutboundData(args: SerializeOutboundArgs): Buffer {
   offset += 8;
 
   buf.set(args.nonce, offset);
+  offset += 32;
+
+  buf.writeUInt32LE(args.orderEra, offset);
 
   return buf;
 }

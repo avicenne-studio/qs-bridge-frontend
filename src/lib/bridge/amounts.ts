@@ -16,7 +16,7 @@ export function computeProgramFees(amount: string): string {
   return rawToDisplay(oracleFee + protocolFee);
 }
 
-function rawToDisplay(raw: bigint): string {
+export function rawToDisplay(raw: bigint): string {
   const whole = raw / DECIMALS_FACTOR;
   const frac = raw % DECIMALS_FACTOR;
   if (frac === 0n) return whole.toString();

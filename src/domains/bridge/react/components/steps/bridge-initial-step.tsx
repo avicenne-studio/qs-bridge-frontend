@@ -23,6 +23,7 @@ interface Props {
   feesAmount: string;
   error: string | null;
   isSolanaToQubic: boolean;
+  isPaused?: boolean;
 }
 
 export default function BridgeInitialStep({
@@ -40,6 +41,7 @@ export default function BridgeInitialStep({
   feesAmount,
   error,
   isSolanaToQubic,
+  isPaused,
 }: Props) {
   return (
     <>
@@ -112,10 +114,13 @@ export default function BridgeInitialStep({
         <span className="col-span-1 col-start-2">
           <Button
             variant="default"
-            label={isSolanaToQubic ? "Bridge" : "Bridge (coming soon)"}
+            label={
+              isPaused ? "Bridge (paused)" : isSolanaToQubic ? "Bridge" : "Bridge (coming soon)"
+            }
             action={onBridge}
             isFullWidth
             isLoading={isBridging}
+            isDisabled={isPaused}
           />
         </span>
       </div>

@@ -1,11 +1,16 @@
 import StatusItem from "./status-item";
+import { useBridgeHealthContext } from "@/providers/BridgeHealthProvider";
 
 export default function StatusSection() {
-  //Todo: get status from backend
+  const { isPaused, healthyOracles, totalOracles, isLoading } = useBridgeHealthContext();
+
+  const bridgeStatus = isPaused ? "Paused" : "Operational";
+  const oraclesLabel = isLoading ? "Loading..." : `${healthyOracles}/${totalOracles} online`;
+
   const STATUS_ITEMS = [
-    { label: "Qubic → Solana", value: "Operational" },
-    { label: "Solana → Qubic", value: "Operational" },
-    { label: "Oracles", value: "12/12 online" },
+    { label: "Qubic → Solana", value: bridgeStatus },
+    { label: "Solana → Qubic", value: bridgeStatus },
+    { label: "Oracles", value: oraclesLabel },
   ];
 
   return (
