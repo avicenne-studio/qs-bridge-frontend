@@ -13,6 +13,7 @@ import FeesDropdown from "../fees-dropdown";
 import BridgeDirectionSection from "../bridge-direction-section";
 import OverrideOrderSection from "../override-order-section";
 import type { OrderStatus } from "@/domains/activity/activity.types";
+import { getTxExplorerUrl } from "@/lib/explorer";
 
 interface Props {
   originNetwork: NetworkTagNetwork;
@@ -101,11 +102,10 @@ export default function BridgeSuccessStep({
                   <span className="text-xs text-primary">Origin transaction</span>
                   <div className="flex items-center gap-2">
                     <a
-                      href={
-                        originNetwork === "Solana"
-                          ? `https://solscan.io/tx/${txSignature}?cluster=devnet`
-                          : `https://explorer.qubic.org/network/tx/${txSignature}`
-                      }
+                      href={getTxExplorerUrl(
+                        txSignature,
+                        originNetwork === "Solana" ? "solana" : "qubic",
+                      )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:text-primary/70"
@@ -131,11 +131,10 @@ export default function BridgeSuccessStep({
                   <span className="text-xs text-primary">Destination transaction</span>
                   <div className="flex items-center gap-2">
                     <a
-                      href={
-                        destinationNetwork === "Solana"
-                          ? `https://solscan.io/tx/${destinationTrxHash}?cluster=devnet`
-                          : `https://explorer.qubic.org/network/tx/${destinationTrxHash}`
-                      }
+                      href={getTxExplorerUrl(
+                        destinationTrxHash,
+                        destinationNetwork === "Solana" ? "solana" : "qubic",
+                      )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:text-primary/70"

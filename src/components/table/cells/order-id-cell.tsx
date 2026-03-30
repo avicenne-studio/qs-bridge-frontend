@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import Tooltip from "@/components/ui/tooltip";
 import CellLayout from "./cell-layout";
@@ -10,11 +10,13 @@ interface Props {
 
 export default function OrderIdCell({ displayId, fullId }: Props) {
   const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(fullId);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCopied(false), 1500);
   }
 
   return (

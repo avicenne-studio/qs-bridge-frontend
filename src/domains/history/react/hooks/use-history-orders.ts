@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchOrders } from "@/lib/hub/hub-client";
 import {
   mapHubOrderToRow,
@@ -35,12 +35,24 @@ export function useHistoryOrders({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [filters, searchQuery, solanaAddress, qubicAddress]);
+  // Track previous filter deps to reset page atomically
+  const prevDepsRef = useRef({ filters, searchQuery, solanaAddress, qubicAddress });
 
   useEffect(() => {
+    const prev = prevDepsRef.current;
+    const filtersChanged =
+      prev.filters !== filters ||
+      prev.searchQuery !== searchQuery ||
+      prev.solanaAddress !== solanaAddress ||
+      prev.qubicAddress !== qubicAddress;
+    prevDepsRef.current = { filters, searchQuery, solanaAddress, qubicAddress };
+
+    // Reset page to 1 when filters change, use current page otherwise
+    const effectivePage = filtersChanged ? 1 : page;
+    if (filtersChanged && page !== 1) {
+      setPage(1);
+    }
+
     const controller = new AbortController();
 
     async function load() {
@@ -60,7 +72,7 @@ export function useHistoryOrders({
       }
 
       const query: HubOrdersQuery = {
-        page,
+        page: effectivePage,
         limit: PAGE_SIZE,
         order: "desc",
         participant,

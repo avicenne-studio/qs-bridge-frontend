@@ -3,13 +3,7 @@ import { truncateAddress } from "@/utils/format";
 import { ExternalLink } from "lucide-react";
 import CellLayout from "./cell-layout";
 import type { Chain } from "@/domains/activity/activity.types";
-
-function getExplorerUrl(address: string, chain: Chain): string {
-  if (chain === "solana") {
-    return `https://solscan.io/account/${address}?cluster=devnet`;
-  }
-  return `https://explorer.qubic.org/network/address/${address}`;
-}
+import { getAddressExplorerUrl } from "@/lib/explorer";
 
 interface Props {
   address: string;
@@ -17,7 +11,7 @@ interface Props {
 }
 
 export default function TableAddressCell({ address, chain }: Props) {
-  const explorerUrl = getExplorerUrl(address, chain);
+  const explorerUrl = getAddressExplorerUrl(address, chain);
 
   return (
     <CellLayout type="td">
