@@ -72,7 +72,7 @@ export function useBridge() {
       return;
     }
 
-    const totalFees = parseFloat(totalProgramFees) + parseFloat(relayFeeDisplay);
+    const totalFees = parseFloat(totalProgramFees) + parseFloat(effectiveRelayFee);
     if (amountValue <= totalFees) {
       setLocalError(`Amount must be greater than total fees (${Math.ceil(totalFees)} QUBIC)`);
       return;
@@ -85,14 +85,14 @@ export function useBridge() {
       result = await bridge.sendOutbound({
         amount: displayToRaw(bridgeAmount),
         toAddress,
-        relayerFee: displayToRaw(relayFeeDisplay),
+        relayerFee: displayToRaw(effectiveRelayFee),
         orderEra: 0,
       });
     } else {
       result = await inbound.sendLock({
         amount: BigInt(Math.floor(parseFloat(bridgeAmount))),
         toSolanaAddress: solanaWallet.address as string,
-        relayerFee: BigInt(Math.floor(parseFloat(relayFeeDisplay))),
+        relayerFee: BigInt(Math.floor(parseFloat(effectiveRelayFee))),
       });
     }
 
@@ -165,13 +165,13 @@ export function useBridge() {
       };
 
   const totalProgramFees = estimate?.totalBridgeFee ?? "0";
-  const estimatedRelayFee = estimate?.relayerFee ?? DEFAULT_RELAYER_FEE_DISPLAY;
+  const effectiveRelayFee = estimate?.relayerFee ?? relayFeeDisplay;
 
   return {
     currentBridgeStep,
     bridgeAmount,
     setBridgeAmount,
-    relayFeeDisplay: estimate ? estimatedRelayFee : relayFeeDisplay,
+    relayFeeDisplay: effectiveRelayFee,
     setRelayFeeDisplay,
     originNetwork,
     destinationNetwork,
