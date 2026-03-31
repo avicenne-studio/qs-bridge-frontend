@@ -76,7 +76,7 @@ export async function mapHubOrderToRow(order: HubOrder): Promise<ActivityRow> {
     to,
     sourceChain: order.source,
     destChain: order.dest,
-    amount: rawToDisplay(BigInt(order.amount)),
+    amount: order.source === "qubic" ? order.amount : rawToDisplay(BigInt(order.amount)),
     date: order.created_at,
     originTrxHash: order.origin_trx_hash,
   };

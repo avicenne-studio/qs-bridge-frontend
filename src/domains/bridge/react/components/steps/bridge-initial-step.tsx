@@ -114,9 +114,7 @@ export default function BridgeInitialStep({
         <span className="col-span-1 col-start-2">
           <Button
             variant="default"
-            label={
-              isPaused ? "Bridge (paused)" : isSolanaToQubic ? "Bridge" : "Bridge (coming soon)"
-            }
+            label={isPaused ? "Bridge (paused)" : "Bridge"}
             action={onBridge}
             isFullWidth
             isLoading={isBridging}

@@ -23,4 +23,5 @@ export type QubicSession =
       method: "metamask" | "seed" | "vault";
       address: Address;
       privateKeyHex?: string;
+      seed?: string;
     };
