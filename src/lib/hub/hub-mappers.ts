@@ -2,7 +2,6 @@ import { PublicKey } from "@solana/web3.js";
 import type { HubOrder, HubChain, HubOrderStatus, HubOrdersQuery } from "./hub.types";
 import type { ActivityRow, OrderStatus } from "@/domains/activity/activity.types";
 import type { HistoryFilter } from "@/domains/history/history.types";
-import { rawToDisplay } from "@/lib/bridge/amounts";
 import { qubicIdentityToBytes } from "@/lib/bridge/qubicAddress";
 import { getQubicClient } from "@/lib/qubicClient";
 
@@ -76,7 +75,7 @@ export async function mapHubOrderToRow(order: HubOrder): Promise<ActivityRow> {
     to,
     sourceChain: order.source,
     destChain: order.dest,
-    amount: order.source === "qubic" ? order.amount : rawToDisplay(BigInt(order.amount)),
+    amount: order.amount,
     date: order.created_at,
     originTrxHash: order.origin_trx_hash,
   };

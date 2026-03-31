@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { estimateFees, HubApiError } from "@/lib/hub/hub-client";
-import { rawToDisplay } from "@/lib/bridge/amounts";
 import { HUB_NETWORK } from "@/lib/hub/hub.types";
 import type { HubNetworkId } from "@/lib/hub/hub.types";
 import { NETWORK } from "@/types/network";
 import type { Network } from "@/types/network";
-import { displayToRaw } from "@/lib/bridge/amounts";
 
 const DEBOUNCE_MS = 500;
 
@@ -50,7 +48,7 @@ export function useFeeEstimate(
         const networkOut =
           originNetwork === NETWORK.Solana ? HUB_NETWORK.Qubic : HUB_NETWORK.Solana;
 
-        const rawAmount = displayToRaw(amount).toString();
+        const quAmount = Math.floor(parseFloat(amount)).toString();
 
         const res = await estimateFees(
           {
@@ -58,19 +56,19 @@ export function useFeeEstimate(
             networkOut,
             fromAddress,
             toAddress,
-            amount: rawAmount,
+            amount: quAmount,
           },
           controller.signal,
         );
 
         const d = res.data;
         setEstimate({
-          oracleFee: rawToDisplay(BigInt(d.bridgeFee.oracleFee)),
-          protocolFee: rawToDisplay(BigInt(d.bridgeFee.protocolFee)),
-          totalBridgeFee: rawToDisplay(BigInt(d.bridgeFee.total)),
-          relayerFee: rawToDisplay(BigInt(d.relayerFee)),
-          networkFee: rawToDisplay(BigInt(d.networkFee)),
-          userReceives: rawToDisplay(BigInt(d.userReceives)),
+          oracleFee: d.bridgeFee.oracleFee,
+          protocolFee: d.bridgeFee.protocolFee,
+          totalBridgeFee: d.bridgeFee.total,
+          relayerFee: d.relayerFee,
+          networkFee: d.networkFee,
+          userReceives: d.userReceives,
         });
       } catch (err) {
         if (controller.signal.aborted) return;

@@ -14,7 +14,7 @@ import { useOrderTracking } from "@/hooks/useOrderTracking";
 
 export type BridgeSteps = "initial" | "successful";
 
-const DEFAULT_RELAYER_FEE_DISPLAY = "0.001";
+const DEFAULT_RELAYER_FEE_DISPLAY = "1000";
 
 export function useBridge() {
   const [currentBridgeStep, setCurrentBridgeStep] = useState<BridgeSteps>("initial");
@@ -69,6 +69,12 @@ export function useBridge() {
     const amountValue = parseFloat(bridgeAmount);
     if (!amountValue || amountValue <= 0) {
       setLocalError("Enter a valid amount");
+      return;
+    }
+
+    const totalFees = parseFloat(totalProgramFees) + parseFloat(relayFeeDisplay);
+    if (amountValue <= totalFees) {
+      setLocalError(`Amount must be greater than total fees (${Math.ceil(totalFees)} QUBIC)`);
       return;
     }
 
