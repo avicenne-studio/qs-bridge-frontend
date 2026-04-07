@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { AlertTriangle, KeyRound, Loader2 } from "lucide-react";
 import cn from "@/utils/classnames";
 import type { useQubicWallet } from "@/providers/QubicWalletProvider";
@@ -31,27 +31,20 @@ export default function SeedPage({ qubic, onError }: Props) {
         </span>
       </div>
 
-      <div className="relative">
-        <textarea
-          value={seed}
-          onChange={(e) => setSeed(e.target.value)}
-          rows={3}
-          spellCheck={false}
-          autoComplete="off"
-          placeholder="55+ character seed or 64-char hex private key..."
-          className={cn(
-            "w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white",
-            "outline-none focus:border-highlight/40 resize-none font-mono",
-            "placeholder:font-sans placeholder:text-white/25",
-            !visible && seed && "text-transparent caret-white",
-          )}
-        />
-        {!visible && seed && (
-          <div className="pointer-events-none absolute inset-0 p-3 text-sm text-white/70 whitespace-pre-wrap break-all">
-            {seed.replace(/[^\s]/g, "•")}
-          </div>
+      <textarea
+        value={seed}
+        onChange={(e) => setSeed(e.target.value)}
+        rows={3}
+        spellCheck={false}
+        autoComplete="off"
+        placeholder="55+ character seed or 64-char hex private key..."
+        style={!visible && seed ? ({ WebkitTextSecurity: "disc" } as CSSProperties) : undefined}
+        className={cn(
+          "w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white",
+          "outline-none focus:border-highlight/40 resize-none font-mono",
+          "placeholder:font-sans placeholder:text-white/25",
         )}
-      </div>
+      />
 
       <div className="flex gap-2">
         <button

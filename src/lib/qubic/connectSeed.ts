@@ -16,13 +16,16 @@ export async function connectViaSeed(
   const normalized = trimmed.toLowerCase();
 
   let publicId: string;
+  let privateKeyHex: string;
 
   if (isQubicSeed(normalized)) {
     const identity = await deriveIdentityFromSeed(normalized);
     publicId = identity.publicId;
+    privateKeyHex = identity.privateKeyHex;
   } else if (isHexPrivateKey(trimmed)) {
     const identity = await deriveIdentityFromPrivateKey(trimmed.replace(/^0x/, ""));
     publicId = identity.publicId;
+    privateKeyHex = identity.privateKeyHex;
   } else {
     throw new Error("Invalid seed. Enter a 55+ character Qubic seed or a 64-char hex private key.");
   }
@@ -37,7 +40,7 @@ export async function connectViaSeed(
   };
 
   return {
-    session: { kind: "local", method: "seed", address: publicId as Address },
+    session: { kind: "local", method: "seed", address: publicId as Address, privateKeyHex },
     accounts: [acc],
   };
 }
