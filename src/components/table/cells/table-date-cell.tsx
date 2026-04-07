@@ -7,9 +7,7 @@ interface Props {
 }
 
 export default function TableDateCell({ date }: Props) {
-  // Hub stores UTC timestamps without timezone suffix — append Z if missing
-  const normalized = date.endsWith("Z") || date.includes("+") ? date : `${date}Z`;
-  const parsed = parseISO(normalized);
+  const parsed = parseISO(date);
   const ago = formatDistanceToNow(parsed, { addSuffix: true });
   const full = format(parsed, "dd/MM/yyyy HH:mm");
 
