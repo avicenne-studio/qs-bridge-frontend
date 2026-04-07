@@ -62,9 +62,6 @@ export default function BridgePage() {
           relayFeesAmount={bridge.relayFeeDisplay}
           newBridge={bridge.handleNewBridge}
           txSignature={bridge.txResult?.signature}
-          onOverride={bridge.lastOrder ? bridge.handleOverride : undefined}
-          isOverriding={bridge.isOverriding}
-          overrideError={bridge.overrideError}
           orderStatus={bridge.orderStatus}
           destinationTrxHash={bridge.destinationTrxHash}
           isTrackingOrder={bridge.isTrackingOrder}

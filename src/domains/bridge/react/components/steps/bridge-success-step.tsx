@@ -11,7 +11,6 @@ import Amount from "@/components/amounts/amount-input";
 import OrderStatusCell from "@/components/table/cells/order-status-cell";
 import FeesDropdown from "../fees-dropdown";
 import BridgeDirectionSection from "../bridge-direction-section";
-import OverrideOrderSection from "../override-order-section";
 import type { OrderStatus } from "@/domains/activity/activity.types";
 import { getTxExplorerUrl } from "@/lib/explorer";
 
@@ -25,9 +24,6 @@ interface Props {
   relayFeesAmount?: string;
   newBridge: () => void;
   txSignature?: string;
-  onOverride?: (newToAddress?: string, newFee?: string) => Promise<void>;
-  isOverriding?: boolean;
-  overrideError?: string | null;
   orderStatus?: OrderStatus | null;
   destinationTrxHash?: string | null;
   isTrackingOrder?: boolean;
@@ -43,9 +39,6 @@ export default function BridgeSuccessStep({
   relayFeesAmount = "0",
   newBridge,
   txSignature,
-  onOverride,
-  isOverriding,
-  overrideError,
   orderStatus,
   destinationTrxHash,
   isTrackingOrder,
@@ -146,15 +139,6 @@ export default function BridgeSuccessStep({
                 </div>
               )}
             </div>
-
-            {/* TODO: remove OverrideOrderSection when no longer needed */}
-            {onOverride && (
-              <OverrideOrderSection
-                onOverride={onOverride}
-                isOverriding={isOverriding}
-                overrideError={overrideError}
-              />
-            )}
           </div>
 
           <div

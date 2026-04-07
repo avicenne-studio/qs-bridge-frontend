@@ -5,7 +5,32 @@ import OrderIdCell from "@/components/table/cells/order-id-cell";
 import TableAddressCell from "@/components/table/cells/table-address-cell";
 import TableDateCell from "@/components/table/cells/table-date-cell";
 import BasicCell from "@/components/table/cells/basic-cell";
+import CellLayout from "@/components/table/cells/cell-layout";
+import Button from "@/components/core/buttons/button/button";
 import type { HistoryRow } from "@/domains/history/history.types";
+import { useModalStore } from "@/stores/modal-store";
+import { ModalType } from "@/types/modal";
+
+function OverrideActionCell({ row }: { row: HistoryRow }) {
+  const { openModal } = useModalStore();
+
+  const canOverride = !!row.nonce && row.networkOut !== undefined;
+
+  return (
+    <CellLayout type="td">
+      {canOverride && (
+        <Button
+          variant="default"
+          size="small"
+          label="Override"
+          action={() =>
+            openModal(ModalType.overrideOrder, { nonce: row.nonce!, networkOut: row.networkOut! })
+          }
+        />
+      )}
+    </CellLayout>
+  );
+}
 
 const columns: ColumnDef<HistoryRow>[] = [
   {
@@ -48,6 +73,12 @@ const columns: ColumnDef<HistoryRow>[] = [
     accessorKey: "date",
     header: () => "Date",
     cell: ({ row }) => <TableDateCell date={row.original.date} />,
+  },
+  {
+    id: "actions",
+    enableSorting: false,
+    header: () => "",
+    cell: ({ row }) => <OverrideActionCell row={row.original} />,
   },
 ];
 

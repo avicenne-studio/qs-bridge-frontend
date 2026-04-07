@@ -81,20 +81,6 @@ export function useBridge() {
     }
   };
 
-  const handleOverride = async (newToAddress?: string, newFee?: string) => {
-    if (!bridge.lastOrder) return;
-
-    const overrideToAddress = newToAddress ? qubicIdentityToBytes(newToAddress) : null;
-    const overrideFee = newFee ? displayToRaw(newFee) : null;
-
-    await bridge.overrideOutbound({
-      networkOut: bridge.lastOrder.networkOut,
-      nonce: bridge.lastOrder.nonce,
-      newToAddress: overrideToAddress,
-      newRelayerFee: overrideFee,
-    });
-  };
-
   const handleNewBridge = () => {
     bridge.reset();
     setBridgeAmount("");
@@ -149,7 +135,6 @@ export function useBridge() {
     isSolanaToQubic,
     switchDirection,
     handleBridge,
-    handleOverride,
     handleNewBridge,
     originWalletConfig,
     destinationWalletConfig,
@@ -158,9 +143,6 @@ export function useBridge() {
     isEstimating,
     error: localError ?? bridge.outboundError ?? estimateError,
     txResult: bridge.txResult,
-    lastOrder: bridge.lastOrder,
-    isOverriding: bridge.isLoading,
-    overrideError: bridge.overrideError,
     solanaConnected: solanaWallet.connected,
     qubicConnected: qubicWallet.connected,
     estimate,

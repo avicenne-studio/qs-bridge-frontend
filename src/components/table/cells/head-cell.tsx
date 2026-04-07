@@ -36,9 +36,11 @@ export default function HeadCell({
         )}
       >
         <span className="text-primary text-sm font-normal">{children}</span>
-        <span className="inline-flex shrink-0" data-sort={sort} aria-hidden>
-          <ArrowUpDown size={12} strokeWidth={1} />
-        </span>
+        {canSort && (
+          <span className="inline-flex shrink-0" data-sort={sort} aria-hidden>
+            <ArrowUpDown size={12} strokeWidth={1} />
+          </span>
+        )}
       </button>
     </CellLayout>
   );
