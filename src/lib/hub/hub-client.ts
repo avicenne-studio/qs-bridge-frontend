@@ -49,7 +49,7 @@ export function fetchOrders(
     }
   }
   const qs = params.toString();
-  return hubFetch<HubOrdersResponse>(`/api/orders/${qs ? `?${qs}` : ""}`, { signal });
+  return hubFetch<HubOrdersResponse>(`/api/orders${qs ? `?${qs}` : ""}`, { signal });
 }
 
 export function fetchOrderByTrxHash(

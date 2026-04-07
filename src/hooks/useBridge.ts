@@ -46,7 +46,7 @@ export function useBridge() {
     originNetwork,
     bridgeAmount,
     solanaWallet.address ?? null,
-    (qubicWallet.address as string) ?? null,
+    qubicWallet.address ?? null,
   );
 
   const switchDirection = () => {
@@ -122,7 +122,6 @@ export function useBridge() {
     }
   };
 
-
   const handleNewBridge = () => {
     bridge.reset();
     inbound.reset();
@@ -178,20 +177,21 @@ export function useBridge() {
     isSolanaToQubic,
     switchDirection,
     handleBridge,
+    handleOverride,
     handleNewBridge,
     originWalletConfig,
     destinationWalletConfig,
     totalProgramFees,
     isBridging: bridge.isLoading || inbound.isLoading,
     isEstimating,
-    error: localError ?? bridge.outboundError ?? inbound.inboundError ?? estimateError ?? trackingError,
+    error:
+      localError ?? bridge.outboundError ?? inbound.inboundError ?? estimateError ?? trackingError,
     txResult: isSolanaToQubic ? bridge.txResult : inbound.txResult,
     lastOrder: isSolanaToQubic ? bridge.lastOrder : inbound.lastLock,
     isOverriding: bridge.isLoading || inbound.isLoading,
     overrideError: isSolanaToQubic ? bridge.overrideError : inbound.overrideError,
     solanaConnected: solanaWallet.connected,
     qubicConnected: qubicWallet.connected,
-    estimate,
     orderStatus,
     destinationTrxHash,
     isTrackingOrder,

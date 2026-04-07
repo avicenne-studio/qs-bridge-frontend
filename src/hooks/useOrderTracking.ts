@@ -44,7 +44,8 @@ export function useOrderTracking(txSignature: string | null) {
       }
 
       try {
-        const res = await fetchOrderByTrxHash(txSignature!, controller.signal);
+        if (!txSignature) return;
+        const res = await fetchOrderByTrxHash(txSignature, controller.signal);
         if (controller.signal.aborted) return;
 
         const status = mapHubStatus(res.data.status);

@@ -48,7 +48,7 @@ export function useFeeEstimate(
         const networkOut =
           originNetwork === NETWORK.Solana ? HUB_NETWORK.Qubic : HUB_NETWORK.Solana;
 
-        const quAmount = Math.floor(parseFloat(amount)).toString();
+        const quAmount = Math.floor(parsedAmount).toString();
 
         const res = await estimateFees(
           {
