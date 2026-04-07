@@ -30,6 +30,7 @@ export function useBridge() {
     orderStatus,
     destinationTrxHash,
     isPolling: isTrackingOrder,
+    trackingError,
   } = useOrderTracking(bridge.txResult?.signature ?? null);
 
   const { estimate, isEstimating, estimateError } = useFeeEstimate(
@@ -141,7 +142,7 @@ export function useBridge() {
     totalProgramFees,
     isBridging: bridge.isLoading,
     isEstimating,
-    error: localError ?? bridge.outboundError ?? estimateError,
+    error: localError ?? bridge.outboundError ?? estimateError ?? trackingError,
     txResult: bridge.txResult,
     solanaConnected: solanaWallet.connected,
     qubicConnected: qubicWallet.connected,

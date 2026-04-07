@@ -14,20 +14,8 @@ const HUB_TO_FRONTEND_STATUS: Record<HubOrderStatus, OrderStatus> = {
   finalized: "finalized",
 };
 
-const FRONTEND_TO_HUB_STATUS: Record<OrderStatus, HubOrderStatus> = {
-  pending: "pending",
-  "ready-for-relay": "ready-for-relay",
-  "in-progress": "relayed",
-  failed: "failed",
-  finalized: "finalized",
-};
-
 export function mapHubStatus(hubStatus: HubOrderStatus): OrderStatus {
   return HUB_TO_FRONTEND_STATUS[hubStatus];
-}
-
-export function mapFrontendStatus(feStatus: OrderStatus): HubOrderStatus {
-  return FRONTEND_TO_HUB_STATUS[feStatus];
 }
 
 function mapDirection(source: HubChain, dest: HubChain): string {

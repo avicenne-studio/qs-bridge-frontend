@@ -13,10 +13,14 @@ export default function OrderIdCell({ displayId, fullId }: Props) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(fullId);
-    setCopied(true);
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(fullId);
+      setCopied(true);
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard API unavailable (non-HTTPS or permission denied)
+    }
   }
 
   return (

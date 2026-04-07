@@ -47,11 +47,13 @@ export function useHistoryOrders({
       prev.qubicAddress !== qubicAddress;
     prevDepsRef.current = { filters, searchQuery, solanaAddress, qubicAddress };
 
-    // Reset page to 1 when filters change, use current page otherwise
-    const effectivePage = filtersChanged ? 1 : page;
+    // When filters change and we're not on page 1, reset page and let
+    // the next effect run handle the fetch (avoids a double fetch).
     if (filtersChanged && page !== 1) {
       setPage(1);
+      return;
     }
+    const effectivePage = filtersChanged ? 1 : page;
 
     const controller = new AbortController();
 
