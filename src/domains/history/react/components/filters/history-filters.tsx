@@ -1,15 +1,29 @@
 import AddFilterButton from "@/domains/history/react/components/add-filter-button";
 import FilterTag from "@/domains/history/react/components/filters/filter-tag";
-import { useHistoryFilters } from "@/domains/history/react/hooks/use-history-filters";
+import type { HistoryFilter } from "@/domains/history/history.types";
+import type { AddFilterOptions } from "@/domains/history/react/hooks/use-history-filters";
 import { useToggle } from "@/hooks/use-toggle";
 import cn from "@/utils/classnames";
 import { ChevronDown, Filter, Search } from "lucide-react";
 
-export default function HistoryFilters() {
-  const [isPanelOpen, togglePanel] = useToggle(false);
+interface Props {
+  filters: HistoryFilter[];
+  searchQuery: string;
+  filtersLabel: string;
+  addFilter: (filter: HistoryFilter, options?: AddFilterOptions) => void;
+  removeFilter: (index: number) => void;
+  setSearchQuery: (query: string) => void;
+}
 
-  const { filters, searchQuery, filtersLabel, addFilter, removeFilter, setSearchQuery } =
-    useHistoryFilters();
+export default function HistoryFilters({
+  filters,
+  searchQuery,
+  filtersLabel,
+  addFilter,
+  removeFilter,
+  setSearchQuery,
+}: Props) {
+  const [isPanelOpen, togglePanel] = useToggle(false);
 
   const hasSearchQuery = searchQuery.trim() !== "";
 

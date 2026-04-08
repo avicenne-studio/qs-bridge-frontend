@@ -8,8 +8,11 @@ import { routes } from "@/constants/routes";
 import { truncateSignature } from "@/utils/format";
 import { computeReceivedAmount } from "@/utils/format";
 import Amount from "@/components/amounts/amount-input";
+import OrderStatusCell from "@/components/table/cells/order-status-cell";
 import FeesDropdown from "../fees-dropdown";
 import BridgeDirectionSection from "../bridge-direction-section";
+import type { OrderStatus } from "@/domains/activity/activity.types";
+import { getTxExplorerUrl } from "@/lib/explorer";
 
 interface Props {
   originNetwork: NetworkTagNetwork;
@@ -21,7 +24,9 @@ interface Props {
   relayFeesAmount?: string;
   newBridge: () => void;
   txSignature?: string;
-  explorerUrl?: string;
+  orderStatus?: OrderStatus | null;
+  destinationTrxHash?: string | null;
+  isTrackingOrder?: boolean;
 }
 
 export default function BridgeSuccessStep({
@@ -34,7 +39,9 @@ export default function BridgeSuccessStep({
   relayFeesAmount = "0",
   newBridge,
   txSignature,
-  explorerUrl,
+  orderStatus,
+  destinationTrxHash,
+  isTrackingOrder,
 }: Props) {
   const receivedAmountFormatted = computeReceivedAmount(amount, feesAmount, relayFeesAmount);
 
@@ -85,22 +92,49 @@ export default function BridgeSuccessStep({
 
               {txSignature && (
                 <div className="flex w-full flex-col gap-2 border-t border-border pt-4">
-                  <span className="text-xs text-primary">Transaction</span>
+                  <span className="text-xs text-primary">Origin transaction</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-primary">
+                    <a
+                      href={getTxExplorerUrl(
+                        txSignature,
+                        originNetwork === "Solana" ? "solana" : "qubic",
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:text-primary/70"
+                    >
                       {truncateSignature(txSignature)}
-                    </span>
-                    {explorerUrl && (
-                      <a
-                        href={explorerUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80"
-                        aria-label="View transaction on explorer"
-                      >
-                        <ExternalLink size={14} aria-hidden />
-                      </a>
-                    )}
+                      <ExternalLink size={12} className="shrink-0" aria-hidden />
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex w-full items-center gap-2 border-t border-border pt-4">
+                <span className="text-xs text-primary">Order status</span>
+                {orderStatus ? (
+                  <OrderStatusCell status={orderStatus} />
+                ) : isTrackingOrder ? (
+                  <span className="text-xs text-gray">Waiting for confirmation...</span>
+                ) : null}
+              </div>
+
+              {destinationTrxHash && (
+                <div className="flex w-full flex-col gap-2 border-t border-border pt-4">
+                  <span className="text-xs text-primary">Destination transaction</span>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={getTxExplorerUrl(
+                        destinationTrxHash,
+                        destinationNetwork === "Solana" ? "solana" : "qubic",
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:text-primary/70"
+                    >
+                      {truncateSignature(destinationTrxHash)}
+                      <ExternalLink size={12} className="shrink-0" aria-hidden />
+                    </a>
                   </div>
                 </div>
               )}

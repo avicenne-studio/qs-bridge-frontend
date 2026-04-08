@@ -1,13 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import DataTable from "@/components/table/data-table";
+import DataTable, { type ServerPagination } from "@/components/table/data-table";
 import OrderStatusCell from "@/components/table/cells/order-status-cell";
+import OrderIdCell from "@/components/table/cells/order-id-cell";
 import TableAddressCell from "@/components/table/cells/table-address-cell";
 import TableDateCell from "@/components/table/cells/table-date-cell";
 import BasicCell from "@/components/table/cells/basic-cell";
 import type { ActivityRow } from "@/domains/activity/activity.types";
-import { MOCKED_TABLE_DATA } from "@/domains/activity/activity.constants";
-
-const PAGE_SIZE = 5;
 
 const columns: ColumnDef<ActivityRow>[] = [
   {
@@ -18,7 +16,9 @@ const columns: ColumnDef<ActivityRow>[] = [
   {
     accessorKey: "orderId",
     header: () => "Order ID",
-    cell: ({ row }) => <BasicCell>{row.original.orderId}</BasicCell>,
+    cell: ({ row }) => (
+      <OrderIdCell displayId={row.original.orderId} fullId={row.original.fullOrderId} />
+    ),
   },
   {
     accessorKey: "direction",
@@ -28,12 +28,16 @@ const columns: ColumnDef<ActivityRow>[] = [
   {
     accessorKey: "from",
     header: () => "From",
-    cell: ({ row }) => <TableAddressCell address={row.original.from} />,
+    cell: ({ row }) => (
+      <TableAddressCell address={row.original.from} chain={row.original.sourceChain} />
+    ),
   },
   {
     accessorKey: "to",
     header: () => "To",
-    cell: ({ row }) => <TableAddressCell address={row.original.to} />,
+    cell: ({ row }) => (
+      <TableAddressCell address={row.original.to} chain={row.original.destChain} />
+    ),
   },
   {
     accessorKey: "amount",
@@ -47,7 +51,28 @@ const columns: ColumnDef<ActivityRow>[] = [
   },
 ];
 
-export default function ActivityTable() {
-  // Todo: get data from backend
-  return <DataTable data={MOCKED_TABLE_DATA} columns={columns} pageSize={PAGE_SIZE} />;
+interface Props {
+  data: ActivityRow[];
+  pagination: ServerPagination;
+  isLoading: boolean;
+  onPageChange: (page: number) => void;
+}
+
+export default function ActivityTable({ data, pagination, isLoading, onPageChange }: Props) {
+  if (isLoading && data.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12 text-sm text-gray">
+        Loading orders...
+      </div>
+    );
+  }
+
+  return (
+    <DataTable
+      data={data}
+      columns={columns}
+      serverPagination={pagination}
+      onPageChange={onPageChange}
+    />
+  );
 }

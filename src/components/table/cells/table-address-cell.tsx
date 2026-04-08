@@ -1,19 +1,30 @@
 import Tooltip from "@/components/ui/tooltip";
 import { truncateAddress } from "@/utils/format";
-import type { Address } from "viem";
+import { ExternalLink } from "lucide-react";
 import CellLayout from "./cell-layout";
+import type { Chain } from "@/domains/activity/activity.types";
+import { getAddressExplorerUrl } from "@/lib/explorer";
 
 interface Props {
-  address: Address;
+  address: string;
+  chain: Chain;
 }
 
-export default function TableAddressCell({ address }: Props) {
+export default function TableAddressCell({ address, chain }: Props) {
+  const explorerUrl = getAddressExplorerUrl(address, chain);
+
   return (
     <CellLayout type="td">
       <Tooltip content={address}>
-        <span className="cursor-default underline decoration-dotted underline-offset-2">
+        <a
+          href={explorerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 hover:text-primary/70"
+        >
           {truncateAddress(address)}
-        </span>
+          <ExternalLink size={12} className="shrink-0" aria-hidden />
+        </a>
       </Tooltip>
     </CellLayout>
   );

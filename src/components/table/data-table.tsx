@@ -13,26 +13,67 @@ import PaginationButton from "./pagination-button";
 import { getHeadCellSortDirection, getHeadCellSortTitle } from "./table.utils";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
+export type ServerPagination = {
+  page: number;
+  limit: number;
+  total: number;
+};
+
 interface DataTableProps<TData> {
   data: TData[];
   columns: ColumnDef<TData>[];
   pageSize?: number;
+  serverPagination?: ServerPagination;
+  onPageChange?: (page: number) => void;
 }
 
-export default function DataTable<TData>({ data, columns, pageSize = 10 }: DataTableProps<TData>) {
+export default function DataTable<TData>({
+  data,
+  columns,
+  pageSize = 10,
+  serverPagination,
+  onPageChange,
+}: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const isServerSide = !!serverPagination;
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    // Todo: when sorting via backend, remove getSortedRowModel()
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageIndex: 0, pageSize } },
-    state: { sorting },
-    onSortingChange: setSorting,
+    ...(isServerSide
+      ? {
+          manualPagination: true,
+          manualSorting: true,
+          pageCount: Math.ceil(serverPagination.total / serverPagination.limit),
+          state: {
+            pagination: {
+              pageIndex: serverPagination.page - 1,
+              pageSize: serverPagination.limit,
+            },
+          },
+          enableSorting: false,
+        }
+      : {
+          getSortedRowModel: getSortedRowModel(),
+          getPaginationRowModel: getPaginationRowModel(),
+          initialState: { pagination: { pageIndex: 0, pageSize } },
+          state: { sorting },
+          onSortingChange: setSorting,
+        }),
   });
+
+  const currentPage = table.getState().pagination.pageIndex;
+  const pageCount = table.getPageCount();
+
+  function goToPage(pageIndex: number) {
+    if (isServerSide && onPageChange) {
+      onPageChange(pageIndex + 1);
+    } else {
+      table.setPageIndex(pageIndex);
+    }
+  }
 
   return (
     <>
@@ -80,37 +121,39 @@ export default function DataTable<TData>({ data, columns, pageSize = 10 }: DataT
         </table>
       </section>
 
-      <div className="flex w-full py-4 justify-center items-center gap-4">
-        <div className="flex items-center gap-2">
-          <PaginationButton
-            action={() => table.setPageIndex(0)}
-            disabled={table.getState().pagination.pageIndex === 0}
-            Icon={ChevronsLeft}
-          />
-          <PaginationButton
-            action={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            Icon={ChevronLeft}
-          />
-        </div>
+      {pageCount > 0 && (
+        <div className="flex w-full py-4 justify-center items-center gap-4">
+          <div className="flex items-center gap-2">
+            <PaginationButton
+              action={() => goToPage(0)}
+              disabled={currentPage === 0}
+              Icon={ChevronsLeft}
+            />
+            <PaginationButton
+              action={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 0}
+              Icon={ChevronLeft}
+            />
+          </div>
 
-        <span className="text-xs font-medium text-primary">
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-        </span>
+          <span className="text-xs font-medium text-primary">
+            Page {currentPage + 1} of {pageCount}
+          </span>
 
-        <div className="flex items-center gap-2">
-          <PaginationButton
-            action={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            Icon={ChevronRight}
-          />
-          <PaginationButton
-            action={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={table.getState().pagination.pageIndex === table.getPageCount() - 1}
-            Icon={ChevronsRight}
-          />
+          <div className="flex items-center gap-2">
+            <PaginationButton
+              action={() => goToPage(currentPage + 1)}
+              disabled={currentPage >= pageCount - 1}
+              Icon={ChevronRight}
+            />
+            <PaginationButton
+              action={() => goToPage(pageCount - 1)}
+              disabled={currentPage >= pageCount - 1}
+              Icon={ChevronsRight}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

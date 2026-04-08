@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ChevronDown, ChevronUp, Edit, Info } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import Tooltip from "@/components/ui/tooltip";
@@ -27,9 +27,9 @@ export default function FeesDropdown({
     if (node !== null) node.focus();
   }, []);
 
-  if (!editing && editValue !== relayFeesAmount) {
-    setEditValue(relayFeesAmount);
-  }
+  useEffect(() => {
+    if (!editing) setEditValue(relayFeesAmount);
+  }, [relayFeesAmount, editing]);
 
   const totalFees = (parseFloat(feesAmount) + parseFloat(relayFeesAmount)).toString();
 

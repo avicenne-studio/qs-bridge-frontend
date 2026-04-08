@@ -1,5 +1,6 @@
 import ComboTextStats from "@/components/stats/combo-text-stats";
 import ActivityTable from "@/domains/activity/react/components/activity-table";
+import { useActivityOrders } from "@/domains/activity/react/hooks/use-activity-orders";
 import cn from "@/utils/classnames";
 import { Lock, Network } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -7,10 +8,11 @@ import type { ComponentProps } from "react";
 type Stats = ComponentProps<typeof ComboTextStats>;
 
 export default function ActivityPage() {
-  //Todo: get stats from backend
+  const { rows, pagination, isLoading, error, goToPage } = useActivityOrders();
+
   const stats: Stats[] = [
-    { title: "Total orders", value: "123", Icon: Network },
-    { title: "Total locked", value: "123", currency: "QUBIC", Icon: Lock },
+    { title: "Total orders", value: pagination.total.toString(), Icon: Network },
+    { title: "Total locked", value: "—", currency: "QUBIC", Icon: Lock },
   ];
 
   return (
@@ -21,7 +23,16 @@ export default function ActivityPage() {
         ))}
       </section>
 
-      <ActivityTable />
+      {error && (
+        <div className="w-full rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+      )}
+
+      <ActivityTable
+        data={rows}
+        pagination={pagination}
+        isLoading={isLoading}
+        onPageChange={goToPage}
+      />
     </div>
   );
 }

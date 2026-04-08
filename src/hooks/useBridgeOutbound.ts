@@ -65,6 +65,7 @@ export function useBridgeOutbound() {
           toAddress: params.toAddress,
           relayerFee: params.relayerFee,
           nonce,
+          orderEra: params.orderEra,
         });
 
         const instruction = createOutboundInstruction({
