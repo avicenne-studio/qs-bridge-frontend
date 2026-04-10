@@ -40,7 +40,13 @@ export async function connectViaSeed(
   };
 
   return {
-    session: { kind: "local", method: "seed", address: publicId as Address, privateKeyHex },
+    session: {
+      kind: "local",
+      method: "seed",
+      address: publicId as Address,
+      privateKeyHex,
+      seed: isQubicSeed(normalized) ? normalized : undefined,
+    },
     accounts: [acc],
   };
 }

@@ -9,6 +9,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      "/qubic-node": {
+        target: "http://34.163.36.179:41841",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/qubic-node/, ""),
+      },
+      "/qubic-indexer": {
+        target: "http://34.163.36.179:3002",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/qubic-indexer/, ""),
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

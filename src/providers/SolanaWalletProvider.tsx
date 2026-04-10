@@ -4,7 +4,6 @@ import { SolanaAdapter } from "@reown/appkit-adapter-solana/react";
 import { solana, solanaDevnet } from "@reown/appkit/networks";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { PublicKey } from "@solana/web3.js";
-import { formatCompactNumber } from "@/utils/format";
 import { solanaConnection } from "@/lib/bridge/solana/connection";
 import { TOKEN_PROGRAM_ID } from "@/lib/bridge/solana/constants";
 
@@ -79,7 +78,7 @@ function SolanaBalanceProvider({ children }: PropsWithChildren) {
         });
         if (cancelled) return;
         const amount = tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount ?? 0;
-        setBalance(formatCompactNumber(Math.floor(amount)));
+        setBalance(Math.floor(amount).toFixed(0));
       } catch {
         // Balance fetch failures are transient; next interval will retry
       }

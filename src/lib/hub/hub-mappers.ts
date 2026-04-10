@@ -2,8 +2,8 @@ import { PublicKey } from "@solana/web3.js";
 import type { HubOrder, HubChain, HubOrderStatus, HubOrdersQuery } from "./hub.types";
 import type { ActivityRow, OrderStatus } from "@/domains/activity/activity.types";
 import type { HistoryFilter } from "@/domains/history/history.types";
-import { rawToDisplay } from "@/lib/bridge/amounts";
 import { qubicIdentityToBytes } from "@/lib/bridge/qubicAddress";
+import { bytesToHex, hexToBytes } from "@/lib/qubicIdentity";
 import { getQubicClient } from "@/lib/qubicClient";
 
 const HUB_TO_FRONTEND_STATUS: Record<HubOrderStatus, OrderStatus> = {
@@ -23,24 +23,12 @@ function mapDirection(source: HubChain, dest: HubChain): string {
   return `${capitalize(source)} → ${capitalize(dest)}`;
 }
 
-function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 export function solanaAddressToHex(address: string): string {
   return bytesToHex(new PublicKey(address).toBytes());
 }
 
 export function qubicAddressToHex(address: string): string {
   return bytesToHex(qubicIdentityToBytes(address));
-}
-
-function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
-  }
-  return bytes;
 }
 
 async function formatAddress(hex: string, chain: HubChain): Promise<string> {
@@ -76,7 +64,7 @@ export async function mapHubOrderToRow(order: HubOrder): Promise<ActivityRow> {
     to,
     sourceChain: order.source,
     destChain: order.dest,
-    amount: rawToDisplay(BigInt(order.amount)),
+    amount: order.amount,
     date: order.created_at,
     originTrxHash: order.origin_trx_hash,
   };

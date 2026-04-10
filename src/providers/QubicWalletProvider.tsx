@@ -40,6 +40,12 @@ export interface QubicWalletState {
   connectWithVaultFile: (file: File, password: string) => Promise<void>;
   disconnect: () => Promise<void>;
   signMessage: (data: Uint8Array) => Promise<Uint8Array>;
+  sendQubicTransaction: (params: {
+    amount: number;
+    contractIndex: number;
+    inputType: number;
+    payload: Uint8Array;
+  }) => Promise<string>;
 }
 
 const QubicWalletContext = createContext<QubicWalletState | null>(null);
@@ -53,10 +59,40 @@ export function useQubicWallet() {
 
 const PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string;
 
+const QUBIC_SESSION_KEY = "qubic_session";
+const QUBIC_ACCOUNTS_KEY = "qubic_accounts";
+
+function persistSession(session: QubicSession | null, accounts: QubicAccount[]) {
+  if (session) {
+    sessionStorage.setItem(QUBIC_SESSION_KEY, JSON.stringify(session));
+    sessionStorage.setItem(QUBIC_ACCOUNTS_KEY, JSON.stringify(accounts));
+  } else {
+    sessionStorage.removeItem(QUBIC_SESSION_KEY);
+    sessionStorage.removeItem(QUBIC_ACCOUNTS_KEY);
+  }
+}
+
+function loadPersistedSession(): { session: QubicSession | null; accounts: QubicAccount[] } {
+  try {
+    const raw = sessionStorage.getItem(QUBIC_SESSION_KEY);
+    const rawAccounts = sessionStorage.getItem(QUBIC_ACCOUNTS_KEY);
+    if (!raw) return { session: null, accounts: [] };
+    return {
+      session: JSON.parse(raw) as QubicSession,
+      accounts: rawAccounts ? (JSON.parse(rawAccounts) as QubicAccount[]) : [],
+    };
+  } catch {
+    return { session: null, accounts: [] };
+  }
+}
+
 export default function QubicWalletProvider({ children }: PropsWithChildren) {
-  const [session, setSession] = useState<QubicSession | null>(null);
-  const [accounts, setAccounts] = useState<QubicAccount[]>([]);
-  const [balance, setBalance] = useState<string | null>(null);
+  const persisted = loadPersistedSession();
+  const [session, setSession] = useState<QubicSession | null>(persisted.session);
+  const [accounts, setAccounts] = useState<QubicAccount[]>(persisted.accounts);
+  const [balance, setBalance] = useState<string | null>(
+    persisted.accounts[0]?.amount != null ? String(persisted.accounts[0].amount) : null,
+  );
   const [walletConnectUri, setWalletConnectUri] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [metamaskAvailable, setMetamaskAvailable] = useState(false);
@@ -75,15 +111,18 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     setAccounts([]);
     setBalance(null);
     setWalletConnectUri(null);
+    persistSession(null, []);
   }
 
   function applyConnect(result: { session: QubicSession; accounts?: QubicAccount[] }) {
     setSession(result.session);
-    if (result.accounts?.length) {
-      setAccounts(result.accounts);
-      const amount = result.accounts[0]?.amount;
+    const newAccounts = result.accounts?.length ? result.accounts : [];
+    if (newAccounts.length) {
+      setAccounts(newAccounts);
+      const amount = newAccounts[0]?.amount;
       setBalance(amount != null ? String(amount) : null);
     }
+    persistSession(result.session, newAccounts);
   }
 
   const { ready, restoredSession, getClient } = useQubicSignClient({
@@ -196,6 +235,39 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     return hexToBytes(result);
   }
 
+  async function handleSendQubicTransaction(params: {
+    amount: number;
+    contractIndex: number;
+    inputType: number;
+    payload: Uint8Array;
+  }): Promise<string> {
+    const s = sessionRef.current;
+    if (!s) throw new Error("Not connected");
+
+    if (s.kind === "local") {
+      throw new Error("Use buildAndBroadcastLockTx for local connections");
+    }
+
+    const client = getClient();
+    if (!client) throw new Error("WalletConnect client not ready");
+    const result = await client.request<string>({
+      topic: s.topic,
+      chainId: QUBIC_CHAIN_ID,
+      request: {
+        method: "qubic_sendTransaction",
+        params: [
+          {
+            amount: params.amount,
+            contractIndex: params.contractIndex,
+            inputType: params.inputType,
+            payload: bytesToHex(params.payload),
+          },
+        ],
+      },
+    });
+    return result;
+  }
+
   async function handleDisconnect() {
     try {
       const s = sessionRef.current;
@@ -229,6 +301,7 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     connectWithVaultFile: handleConnectWithVaultFile,
     disconnect: handleDisconnect,
     signMessage: handleSignMessage,
+    sendQubicTransaction: handleSendQubicTransaction,
   };
 
   return <QubicWalletContext.Provider value={value}>{children}</QubicWalletContext.Provider>;

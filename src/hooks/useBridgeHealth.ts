@@ -11,12 +11,12 @@ export function useBridgeHealth() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let aborted = false;
+    const controller = new AbortController();
 
     async function pollBridge() {
       try {
-        const res = await fetchBridgeHealth();
-        if (!aborted) setIsPaused(res.paused);
+        const res = await fetchBridgeHealth(controller.signal);
+        if (!controller.signal.aborted) setIsPaused(res.paused);
       } catch {
         // Silently ignore — will retry
       }
@@ -26,24 +26,24 @@ export function useBridgeHealth() {
     const bridgeInterval = setInterval(pollBridge, BRIDGE_POLL_MS);
 
     return () => {
-      aborted = true;
+      controller.abort();
       clearInterval(bridgeInterval);
     };
   }, []);
 
   useEffect(() => {
-    let aborted = false;
+    const controller = new AbortController();
 
     async function pollOracles() {
       try {
-        const res = await fetchOraclesHealth();
-        if (aborted) return;
+        const res = await fetchOraclesHealth(controller.signal);
+        if (controller.signal.aborted) return;
         setTotalOracles(res.oracles.length);
         setHealthyOracles(res.oracles.filter((o) => o.status === "ok").length);
       } catch {
         // Silently ignore — will retry
       } finally {
-        if (!aborted) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
@@ -51,7 +51,7 @@ export function useBridgeHealth() {
     const oraclesInterval = setInterval(pollOracles, ORACLES_POLL_MS);
 
     return () => {
-      aborted = true;
+      controller.abort();
       clearInterval(oraclesInterval);
     };
   }, []);
