@@ -11,7 +11,16 @@ interface Props {
   step?: string | number;
 }
 
-export default function AdminInput({ label, value, onChange, placeholder, type = "text", min, max, step }: Props) {
+export default function AdminInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  min,
+  max,
+  step,
+}: Props) {
   return (
     <label className="flex flex-col gap-1">
       <span className="text-xs font-medium text-gray">{label}</span>

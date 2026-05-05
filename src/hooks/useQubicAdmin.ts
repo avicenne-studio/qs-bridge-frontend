@@ -108,15 +108,9 @@ export function useQubicAdmin(): QubicAdminActions {
     [session],
   );
 
-  const pause = useCallback(
-    () => send(PROC_PAUSE, new Uint8Array(0)),
-    [session],
-  );
+  const pause = useCallback(() => send(PROC_PAUSE, new Uint8Array(0)), [session]);
 
-  const unpause = useCallback(
-    () => send(PROC_UNPAUSE, new Uint8Array(0)),
-    [session],
-  );
+  const unpause = useCallback(() => send(PROC_UNPAUSE, new Uint8Array(0)), [session]);
 
   return {
     addRole,

@@ -28,8 +28,6 @@ function SolanaAdminPanel({
 }) {
   const solanaAdmin = useSolanaAdmin();
 
-  const [oracleKey, setOracleKey] = useState("");
-  const [removeOracleKey, setRemoveOracleKey] = useState("");
   const [pauserKey, setPauserKey] = useState("");
   const [removePauserKey, setRemovePauserKey] = useState("");
 
@@ -37,35 +35,6 @@ function SolanaAdminPanel({
     <div className="flex flex-col gap-3">
       {isSolanaAdmin && (
         <>
-          <AdminActionForm
-            title="Add Oracle"
-            onSubmit={() => solanaAdmin.addOracle(oracleKey.trim())}
-            submitLabel="Add Oracle"
-            disabled={!oracleKey.trim()}
-          >
-            <AdminInput
-              label="Oracle Solana address (base58)"
-              value={oracleKey}
-              onChange={setOracleKey}
-              placeholder="Pubkey..."
-            />
-          </AdminActionForm>
-
-          <AdminActionForm
-            title="Remove Oracle"
-            description="Fails if the oracle has unclaimed fees."
-            onSubmit={() => solanaAdmin.removeOracle(removeOracleKey.trim())}
-            submitLabel="Remove Oracle"
-            disabled={!removeOracleKey.trim()}
-          >
-            <AdminInput
-              label="Oracle Solana address (base58)"
-              value={removeOracleKey}
-              onChange={setRemoveOracleKey}
-              placeholder="Pubkey..."
-            />
-          </AdminActionForm>
-
           <AdminActionForm
             title="Add Pauser"
             onSubmit={() => solanaAdmin.addPauser(pauserKey.trim())}
@@ -144,13 +113,7 @@ function QubicAdminPanel({
     { value: QUBIC_ROLE_PAUSER, label: "Pauser" },
   ];
 
-  function RoleSelect({
-    value,
-    onChange,
-  }: {
-    value: number;
-    onChange: (v: number) => void;
-  }) {
+  function RoleSelect({ value, onChange }: { value: number; onChange: (v: number) => void }) {
     return (
       <label className="flex flex-col gap-1">
         <span className="text-xs font-medium text-gray">Role</span>
@@ -248,8 +211,7 @@ function QubicAdminPanel({
             }
             submitLabel="Update Fees"
             disabled={
-              protocolFeeRecipient.trim().length !== 60 ||
-              oracleFeeRecipient.trim().length !== 60
+              protocolFeeRecipient.trim().length !== 60 || oracleFeeRecipient.trim().length !== 60
             }
           >
             <AdminInput
@@ -318,7 +280,6 @@ export default function AdminPage() {
     isSolanaAdmin,
     isSolanaPauser,
     isQubicAdmin,
-    isQubicOracle,
     isQubicPauser,
     qubicConfig,
     loading,
@@ -373,7 +334,6 @@ export default function AdminPage() {
                 <p className="font-mono text-xs text-primary break-all">{String(qubicAddress)}</p>
                 <div className="flex flex-wrap gap-1.5">
                   <RoleBadge label="Admin" active={isQubicAdmin} />
-                  <RoleBadge label="Oracle" active={isQubicOracle} />
                   <RoleBadge label="Pauser" active={isQubicPauser} />
                 </div>
               </>
@@ -419,8 +379,12 @@ export default function AdminPage() {
       {/* No access */}
       {!hasSolanaAccess && !hasQubicAccess && (solanaConnected || qubicConnected) && !loading && (
         <div className="flex flex-col items-center gap-2 py-12 text-center">
-          <p className="text-sm text-gray">No admin or pauser roles detected for connected wallets.</p>
-          <p className="text-xs text-gray/60">Connect the wallet that holds admin or pauser privileges.</p>
+          <p className="text-sm text-gray">
+            No admin or pauser roles detected for connected wallets.
+          </p>
+          <p className="text-xs text-gray/60">
+            Connect the wallet that holds admin or pauser privileges.
+          </p>
         </div>
       )}
 

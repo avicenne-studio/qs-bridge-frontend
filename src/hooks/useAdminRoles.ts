@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { solanaConnection } from "@/lib/bridge/solana/connection";
 import { GLOBAL_STATE_PDA } from "@/lib/bridge/solana/pda";
-import { queryGetConfig, queryIsOracle, queryIsPauser, type QubicConfig } from "@/lib/bridge/qubic/query";
+import { queryGetConfig, queryIsPauser, type QubicConfig } from "@/lib/bridge/qubic/query";
 import { publicIdToBytes } from "@/lib/bridge/qubic/admin-payloads";
 import useSolanaWallet from "./useSolanaWallet";
 import { useQubicWallet } from "@/providers/QubicWalletProvider";
@@ -26,7 +26,6 @@ export interface AdminRoles {
   isSolanaAdmin: boolean;
   isSolanaPauser: boolean;
   isQubicAdmin: boolean;
-  isQubicOracle: boolean;
   isQubicPauser: boolean;
   qubicConfig: QubicConfig | null;
   loading: boolean;
@@ -40,7 +39,6 @@ export function useAdminRoles(): AdminRoles {
   const [solanaAdmin, setSolanaAdmin] = useState<string | null>(null);
   const [isSolanaPauser, setIsSolanaPauser] = useState(false);
   const [isQubicAdmin, setIsQubicAdmin] = useState(false);
-  const [isQubicOracle, setIsQubicOracle] = useState(false);
   const [isQubicPauser, setIsQubicPauser] = useState(false);
   const [qubicConfig, setQubicConfig] = useState<QubicConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,18 +92,18 @@ export function useAdminRoles(): AdminRoles {
           const isAdmin = adminBytes.every((b: number, i: number) => b === accountBytes[i]);
           setIsQubicAdmin(isAdmin);
 
-          // Check oracle/pauser roles on-chain
+          // Check pauser role on-chain
           qubicChecks.push(
-            queryIsOracle(accountBytes)
-              .then((v) => { if (!cancelled) setIsQubicOracle(v); })
-              .catch(() => { if (!cancelled) setIsQubicOracle(false); }),
             queryIsPauser(accountBytes)
-              .then((v) => { if (!cancelled) setIsQubicPauser(v); })
-              .catch(() => { if (!cancelled) setIsQubicPauser(false); }),
+              .then((v: boolean) => {
+                if (!cancelled) setIsQubicPauser(v);
+              })
+              .catch(() => {
+                if (!cancelled) setIsQubicPauser(false);
+              }),
           );
         } else {
           setIsQubicAdmin(false);
-          setIsQubicOracle(false);
           setIsQubicPauser(false);
         }
 
@@ -132,7 +130,6 @@ export function useAdminRoles(): AdminRoles {
     isSolanaAdmin,
     isSolanaPauser,
     isQubicAdmin,
-    isQubicOracle,
     isQubicPauser,
     qubicConfig,
     loading,

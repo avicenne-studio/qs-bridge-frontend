@@ -78,11 +78,16 @@ export default function AdminActionForm({
           <span className="flex items-center gap-1.5 text-xs text-emerald-400">
             <CheckCircle size={13} />
             {result.explorerUrl ? (
-              <a href={result.explorerUrl} target="_blank" rel="noopener noreferrer" className="underline">
+              <a
+                href={result.explorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
                 {result.signature ?? result.txId ?? "Success"}
               </a>
             ) : (
-              result.txId ?? "Sent"
+              (result.txId ?? "Sent")
             )}
           </span>
         )}
