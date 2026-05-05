@@ -102,3 +102,35 @@ export async function buildAndBroadcastOverrideLockTx(
 
   return { txId };
 }
+
+export async function buildAndBroadcastAdminTx(
+  seed: string,
+  inputType: number,
+  adminPayload: Uint8Array,
+): Promise<{ txId: string }> {
+  const helper = new QubicHelper();
+  const { publicKey } = await helper.createIdPackage(seed);
+
+  const tick = await getCurrentTick();
+  const targetTick = tick + TICK_OFFSET;
+
+  const dest = new PublicKey(contractDestination(QSB_CONTRACT_INDEX));
+  const payload = new DynamicPayload(adminPayload.length);
+  payload.setPayload(adminPayload);
+
+  const tx = new QubicTransaction()
+    .setSourcePublicKey(new PublicKey(publicKey))
+    .setDestinationPublicKey(dest)
+    .setAmount(new Long(0))
+    .setTick(targetTick)
+    .setInputType(inputType)
+    .setInputSize(adminPayload.length)
+    .setPayload(payload);
+
+  const builtTx = await tx.build(seed);
+  const txId = tx.getId();
+
+  await broadcastQubicTx(new Uint8Array(builtTx));
+
+  return { txId };
+}
