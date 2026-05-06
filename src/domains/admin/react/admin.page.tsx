@@ -252,7 +252,7 @@ function SolanaAdminPanel({
       {/* Fee info */}
       <div className="flex flex-wrap gap-4 rounded-lg border border-gray/20 px-4 py-3">
         <Stat label="BPS fee" value={`${bpsFee} bps`} />
-        <Stat label="Protocol share" value={`${protocolFeeBpsOfBps}%`} />
+        <Stat label="Protocol share" value={`${protocolFeeBpsOfBps / 100}%`} />
         <Stat
           label="Owed protocol fee"
           value={`${formatWQubic(owedProtocolFee)} wQUBIC`}
