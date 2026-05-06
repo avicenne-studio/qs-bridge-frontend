@@ -7,6 +7,7 @@ interface Props {
   description?: string;
   children: ReactNode;
   onSubmit: () => Promise<{ signature?: string; txId?: string; explorerUrl?: string }>;
+  onSuccess?: (result: { signature?: string; txId?: string; explorerUrl?: string }) => void;
   submitLabel: string;
   disabled?: boolean;
 }
@@ -16,6 +17,7 @@ export default function AdminActionForm({
   description,
   children,
   onSubmit,
+  onSuccess,
   submitLabel,
   disabled,
 }: Props) {
@@ -35,6 +37,7 @@ export default function AdminActionForm({
     try {
       const res = await onSubmit();
       setResult(res);
+      onSuccess?.(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Transaction failed");
     } finally {
