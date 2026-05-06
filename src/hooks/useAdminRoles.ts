@@ -40,30 +40,73 @@ export function decodeSolanaPaused(data: Uint8Array): boolean {
   return data.length >= 110 && data[109] !== 0;
 }
 
+interface SolanaGlobalState {
+  admin: string | null;
+  protocolFeeRecipient: string | null;
+  tokenMint: string | null;
+  owedProtocolFee: bigint;
+  bpsFee: number;
+  protocolFeeBpsOfBps: number;
+  paused: boolean;
+}
+
+function decodeSolanaGlobalState(data: Uint8Array): SolanaGlobalState | null {
+  try {
+    if (data.length < 112) return null;
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    return {
+      admin: new PublicKey(data.slice(1, 33)).toBase58(),
+      protocolFeeRecipient: new PublicKey(data.slice(33, 65)).toBase58(),
+      tokenMint: new PublicKey(data.slice(65, 97)).toBase58(),
+      owedProtocolFee: view.getBigUint64(97, true),
+      bpsFee: view.getUint16(105, true),
+      protocolFeeBpsOfBps: view.getUint16(107, true),
+      paused: data[109] !== 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // Oracle account: key(1, value=1) + oraclePubkey(32) + claimableBalance(8) + bump(1) = 42 bytes
 // Pauser account: key(1, value=2) + pauserPubkey(32) + bump(1) = 34 bytes
 // memcmp bytes are base58-encoded: key 1 → "2", key 2 → "3"
-async function fetchSolanaOracles(): Promise<string[]> {
+export interface SolanaOracle {
+  pubkey: string;
+  claimableBalance: bigint;
+}
+
+async function fetchSolanaOracles(): Promise<SolanaOracle[]> {
   const accounts = await solanaConnection.getProgramAccounts(PROGRAM_ID, {
     filters: [{ dataSize: 42 }, { memcmp: { offset: 0, bytes: "2" } }],
   });
-  return accounts.map(({ account }) => new PublicKey(account.data.slice(1, 33)).toBase58());
+  return accounts.map(({ account }) => {
+    const pubkey = new PublicKey(account.data.subarray(1, 33)).toBase58();
+    const view = new DataView(account.data.buffer, account.data.byteOffset + 33, 8);
+    return { pubkey, claimableBalance: view.getBigUint64(0, true) };
+  });
 }
 
 async function fetchSolanaPausers(): Promise<string[]> {
   const accounts = await solanaConnection.getProgramAccounts(PROGRAM_ID, {
     filters: [{ dataSize: 34 }, { memcmp: { offset: 0, bytes: "3" } }],
   });
-  return accounts.map(({ account }) => new PublicKey(account.data.slice(1, 33)).toBase58());
+  return accounts.map(({ account }) => new PublicKey(account.data.subarray(1, 33)).toBase58());
 }
 
 export interface AdminRoles {
   solanaAdmin: string | null;
+  solanaProtocolFeeRecipient: string | null;
+  solanaTokenMint: string | null;
   solanaPaused: boolean;
-  solanaOracles: string[];
+  solanaOwedProtocolFee: bigint;
+  solanaBpsFee: number;
+  solanaProtocolFeeBps: number;
+  solanaOracles: SolanaOracle[];
   solanaPausers: string[];
   isSolanaAdmin: boolean;
   isSolanaPauser: boolean;
+  isSolanaProtocolFeeRecipient: boolean;
   isQubicAdmin: boolean;
   isQubicPauser: boolean;
   qubicOracles: string[];
@@ -78,8 +121,13 @@ export function useAdminRoles(): AdminRoles {
   const { connected: qubicConnected, address: qubicAddress } = useQubicWallet();
 
   const [solanaAdmin, setSolanaAdmin] = useState<string | null>(null);
+  const [solanaProtocolFeeRecipient, setSolanaProtocolFeeRecipient] = useState<string | null>(null);
+  const [solanaTokenMint, setSolanaTokenMint] = useState<string | null>(null);
   const [solanaPaused, setSolanaPaused] = useState(false);
-  const [solanaOracles, setSolanaOracles] = useState<string[]>([]);
+  const [solanaOwedProtocolFee, setSolanaOwedProtocolFee] = useState(0n);
+  const [solanaBpsFee, setSolanaBpsFee] = useState(0);
+  const [solanaProtocolFeeBps, setSolanaProtocolFeeBps] = useState(0);
+  const [solanaOracles, setSolanaOracles] = useState<SolanaOracle[]>([]);
   const [solanaPausers, setSolanaPausers] = useState<string[]>([]);
   const [isSolanaPauser, setIsSolanaPauser] = useState(false);
   const [solanaLoading, setSolanaLoading] = useState(true);
@@ -123,7 +171,7 @@ export function useAdminRoles(): AdminRoles {
     };
   }, [tick]);
 
-  // Solana: global state (admin, paused) + pauser role check
+  // Solana: global state (admin, paused, fees) + pauser role check
   useEffect(() => {
     let cancelled = false;
 
@@ -133,9 +181,14 @@ export function useAdminRoles(): AdminRoles {
         const globalInfo = await solanaConnection.getAccountInfo(GLOBAL_STATE_PDA);
         if (cancelled) return;
 
-        const data = globalInfo?.data ?? null;
-        setSolanaAdmin(data ? decodeSolanaAdmin(data) : null);
-        setSolanaPaused(data ? decodeSolanaPaused(data) : false);
+        const gs = globalInfo ? decodeSolanaGlobalState(globalInfo.data) : null;
+        setSolanaAdmin(gs?.admin ?? null);
+        setSolanaProtocolFeeRecipient(gs?.protocolFeeRecipient ?? null);
+        setSolanaTokenMint(gs?.tokenMint ?? null);
+        setSolanaPaused(gs?.paused ?? false);
+        setSolanaOwedProtocolFee(gs?.owedProtocolFee ?? 0n);
+        setSolanaBpsFee(gs?.bpsFee ?? 0);
+        setSolanaProtocolFeeBps(gs?.protocolFeeBpsOfBps ?? 0);
 
         if (solanaConnected && solanaAddress) {
           try {
@@ -176,7 +229,9 @@ export function useAdminRoles(): AdminRoles {
 
         if (qubicConnected && qubicAddress) {
           const accountBytes = publicIdToBytes(qubicAddress as string);
-          const isAdmin = cfg.adminBytes.every((b: number, i: number) => b === accountBytes[i]);
+          const isAdmin = cfg.adminBytes.every(
+            (b: number, i: number) => b === accountBytes[i],
+          );
           if (!cancelled) setIsQubicAdmin(isAdmin);
 
           try {
@@ -203,14 +258,22 @@ export function useAdminRoles(): AdminRoles {
   }, [qubicConnected, qubicAddress, tick]);
 
   const isSolanaAdmin = solanaAdmin !== null && solanaAddress === solanaAdmin;
+  const isSolanaProtocolFeeRecipient =
+    solanaProtocolFeeRecipient !== null && solanaAddress === solanaProtocolFeeRecipient;
 
   return {
     solanaAdmin,
+    solanaProtocolFeeRecipient,
+    solanaTokenMint,
     solanaPaused,
+    solanaOwedProtocolFee,
+    solanaBpsFee,
+    solanaProtocolFeeBps,
     solanaOracles,
     solanaPausers,
     isSolanaAdmin,
     isSolanaPauser,
+    isSolanaProtocolFeeRecipient,
     isQubicAdmin,
     isQubicPauser,
     qubicOracles,

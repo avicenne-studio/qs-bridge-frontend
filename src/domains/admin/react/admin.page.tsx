@@ -1,15 +1,24 @@
 import { useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import cn from "@/utils/classnames";
-import { useAdminRoles } from "@/hooks/useAdminRoles";
+import { useAdminRoles, type SolanaOracle } from "@/hooks/useAdminRoles";
 import { useSolanaAdmin } from "@/hooks/useSolanaAdmin";
 import { useQubicAdmin } from "@/hooks/useQubicAdmin";
-import { QUBIC_ROLE_ORACLE, QUBIC_ROLE_PAUSER } from "@/lib/bridge/qubic/admin-payloads";
+import { QUBIC_ROLE_ORACLE, QUBIC_ROLE_PAUSER, bytesToPublicId } from "@/lib/bridge/qubic/admin-payloads";
 import useSolanaWallet from "@/hooks/useSolanaWallet";
 import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import AdminActionForm from "./components/admin-action-form";
 import AdminInput from "./components/admin-input";
 import RoleBadge from "./components/role-badge";
+import type { QubicConfig } from "@/lib/bridge/qubic/query";
+
+function formatWQubic(raw: bigint): string {
+  if (raw === 0n) return "0";
+  const dec = 9;
+  const whole = raw / BigInt(10 ** dec);
+  const frac = (raw % BigInt(10 ** dec)).toString().padStart(dec, "0").replace(/0+$/, "");
+  return frac ? `${whole}.${frac}` : whole.toString();
+}
 
 function SectionTitle({ children }: { children: string }) {
   return (
@@ -79,37 +88,209 @@ function AddressTable({
   );
 }
 
+function OracleTable({
+  oracles,
+  connectedAddress,
+  isSolanaAdmin,
+  tokenMint,
+  onRemove,
+  onClaim,
+}: {
+  oracles: SolanaOracle[];
+  connectedAddress: string | null;
+  isSolanaAdmin: boolean;
+  tokenMint: string | null;
+  onRemove?: (pubkey: string) => Promise<unknown>;
+  onClaim?: (pubkey: string) => Promise<unknown>;
+}) {
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  if (oracles.length === 0) {
+    return <p className="text-xs text-gray italic">No oracles</p>;
+  }
+
+  async function handleAction(
+    key: string,
+    setActive: (v: string | null) => void,
+    fn: () => Promise<unknown>,
+  ) {
+    setActive(key);
+    setErrors((prev) => ({ ...prev, [key]: "" }));
+    try {
+      await fn();
+    } catch (err) {
+      setErrors((prev) => ({
+        ...prev,
+        [key]: err instanceof Error ? err.message : "Failed",
+      }));
+    } finally {
+      setActive(null);
+    }
+  }
+
+  return (
+    <ul className="flex flex-col divide-y divide-gray/10">
+      {oracles.map(({ pubkey, claimableBalance }) => {
+        const canClaim =
+          tokenMint !== null &&
+          claimableBalance > 0n &&
+          (connectedAddress === pubkey || isSolanaAdmin);
+
+        return (
+          <li key={pubkey} className="flex flex-col gap-0.5 py-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-xs text-primary break-all flex-1">{pubkey}</span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {errors[pubkey] && (
+                  <span className="text-xs text-rose-500">{errors[pubkey]}</span>
+                )}
+                {canClaim && onClaim && (
+                  <button
+                    onClick={() =>
+                      handleAction(pubkey + ":claim", setClaiming, () => onClaim(pubkey))
+                    }
+                    disabled={claiming === pubkey + ":claim"}
+                    className="text-xs text-highlight hover:opacity-80 transition-opacity disabled:opacity-40 font-medium"
+                  >
+                    {claiming === pubkey + ":claim" ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      "Claim"
+                    )}
+                  </button>
+                )}
+                {onRemove && (
+                  <button
+                    onClick={() =>
+                      handleAction(pubkey, setRemoving, () => onRemove(pubkey))
+                    }
+                    disabled={removing === pubkey}
+                    className="text-gray hover:text-rose-500 transition-colors disabled:opacity-40"
+                    title="Remove"
+                  >
+                    {removing === pubkey ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={13} />
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-gray">
+              Claimable:{" "}
+              <span className={claimableBalance > 0n ? "text-emerald-500 font-medium" : ""}>
+                {formatWQubic(claimableBalance)} wQUBIC
+              </span>
+            </p>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function SolanaAdminPanel({
   oracles,
   pausers,
   paused,
+  owedProtocolFee,
+  protocolFeeRecipient,
+  tokenMint,
+  bpsFee,
+  protocolFeeBpsOfBps,
+  isSolanaAdmin,
+  isSolanaProtocolFeeRecipient,
   onRolesChanged,
 }: {
-  oracles: string[];
+  oracles: SolanaOracle[];
   pausers: string[];
   paused: boolean;
+  owedProtocolFee: bigint;
+  protocolFeeRecipient: string | null;
+  tokenMint: string | null;
+  bpsFee: number;
+  protocolFeeBpsOfBps: number;
+  isSolanaAdmin: boolean;
+  isSolanaProtocolFeeRecipient: boolean;
   onRolesChanged: () => void;
 }) {
   const solanaAdmin = useSolanaAdmin();
+  const { address: solanaAddress } = useSolanaWallet();
 
   const [oracleKey, setOracleKey] = useState("");
   const [pauserKey, setPauserKey] = useState("");
 
   return (
     <div className="flex flex-col gap-5">
+      {/* Fee info */}
+      <div className="flex flex-wrap gap-4 rounded-lg border border-gray/20 px-4 py-3">
+        <Stat label="BPS fee" value={`${bpsFee} bps`} />
+        <Stat label="Protocol share" value={`${protocolFeeBpsOfBps}%`} />
+        <Stat
+          label="Owed protocol fee"
+          value={`${formatWQubic(owedProtocolFee)} wQUBIC`}
+          highlight={owedProtocolFee > 0n ? "ok" : undefined}
+        />
+        {protocolFeeRecipient && (
+          <div className="flex flex-col gap-0.5 w-full">
+            <p className="text-xs text-gray">Protocol fee recipient</p>
+            <p className="font-mono text-xs text-primary break-all">{protocolFeeRecipient}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Claim protocol fee */}
+      {isSolanaProtocolFeeRecipient && (
+        <AdminActionForm
+          title="Claim Protocol Fee"
+          onSubmit={async () => {
+            const r = await solanaAdmin.claimProtocolFee(tokenMint!);
+            onRolesChanged();
+            return r;
+          }}
+          submitLabel="Claim"
+          disabled={owedProtocolFee === 0n || tokenMint === null}
+        >
+          <p className="text-xs text-gray">
+            {owedProtocolFee === 0n
+              ? "Nothing to claim."
+              : `Claim ${formatWQubic(owedProtocolFee)} wQUBIC to your wallet.`}
+          </p>
+        </AdminActionForm>
+      )}
+
+      {/* Oracle + pauser lists */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <p className="text-xs font-semibold text-gray uppercase tracking-wide">
             Oracles ({oracles.length})
           </p>
-          <AddressTable
-            addresses={oracles}
-            emptyLabel="No oracles"
-            onRemove={async (addr) => {
-              const r = await solanaAdmin.removeOracle(addr);
-              onRolesChanged();
-              return r;
-            }}
+          <OracleTable
+            oracles={oracles}
+            connectedAddress={solanaAddress}
+            isSolanaAdmin={isSolanaAdmin}
+            tokenMint={tokenMint}
+            onRemove={
+              isSolanaAdmin
+                ? async (pubkey) => {
+                    const r = await solanaAdmin.removeOracle(pubkey);
+                    onRolesChanged();
+                    return r;
+                  }
+                : undefined
+            }
+            onClaim={
+              tokenMint
+                ? async (pubkey) => {
+                    const r = await solanaAdmin.claimOracleFee(pubkey, tokenMint);
+                    onRolesChanged();
+                    return r;
+                  }
+                : undefined
+            }
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -119,52 +300,60 @@ function SolanaAdminPanel({
           <AddressTable
             addresses={pausers}
             emptyLabel="No pausers"
-            onRemove={async (addr) => {
-              const r = await solanaAdmin.removePauser(addr);
-              onRolesChanged();
-              return r;
-            }}
+            onRemove={
+              isSolanaAdmin
+                ? async (addr) => {
+                    const r = await solanaAdmin.removePauser(addr);
+                    onRolesChanged();
+                    return r;
+                  }
+                : undefined
+            }
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <AdminActionForm
-          title="Add Oracle"
-          onSubmit={async () => {
-            const r = await solanaAdmin.addOracle(oracleKey.trim());
-            onRolesChanged();
-            return r;
-          }}
-          submitLabel="Add Oracle"
-          disabled={!oracleKey.trim()}
-        >
-          <AdminInput
-            label="Oracle Solana address (base58)"
-            value={oracleKey}
-            onChange={setOracleKey}
-            placeholder="Pubkey..."
-          />
-        </AdminActionForm>
+      {isSolanaAdmin && (
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <AdminActionForm
+              title="Add Oracle"
+              onSubmit={async () => {
+                const r = await solanaAdmin.addOracle(oracleKey.trim());
+                onRolesChanged();
+                return r;
+              }}
+              submitLabel="Add Oracle"
+              disabled={!oracleKey.trim()}
+            >
+              <AdminInput
+                label="Oracle Solana address (base58)"
+                value={oracleKey}
+                onChange={setOracleKey}
+                placeholder="Pubkey..."
+              />
+            </AdminActionForm>
 
-        <AdminActionForm
-          title="Add Pauser"
-          onSubmit={async () => {
-            const r = await solanaAdmin.addPauser(pauserKey.trim());
-            onRolesChanged();
-            return r;
-          }}
-          submitLabel="Add Pauser"
-          disabled={!pauserKey.trim()}
-        >
-          <AdminInput
-            label="Pauser Solana address (base58)"
-            value={pauserKey}
-            onChange={setPauserKey}
-            placeholder="Pubkey..."
-          />
-        </AdminActionForm>
-      </div>
+            <AdminActionForm
+              title="Add Pauser"
+              onSubmit={async () => {
+                const r = await solanaAdmin.addPauser(pauserKey.trim());
+                onRolesChanged();
+                return r;
+              }}
+              submitLabel="Add Pauser"
+              disabled={!pauserKey.trim()}
+            >
+              <AdminInput
+                label="Pauser Solana address (base58)"
+                value={pauserKey}
+                onChange={setPauserKey}
+                placeholder="Pubkey..."
+              />
+            </AdminActionForm>
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <AdminActionForm
@@ -205,11 +394,13 @@ function QubicAdminPanel({
   oracles,
   pausers,
   paused,
+  config,
   onRolesChanged,
 }: {
   oracles: string[];
   pausers: string[];
   paused: boolean;
+  config: QubicConfig | null;
   onRolesChanged: () => void;
 }) {
   const qubicAdmin = useQubicAdmin();
@@ -251,6 +442,27 @@ function QubicAdminPanel({
 
   return (
     <div className="flex flex-col gap-5">
+      {/* Current fee parameters */}
+      {config && (
+        <div className="flex flex-wrap gap-4 rounded-lg border border-gray/20 px-4 py-3">
+          <Stat label="BPS fee" value={`${config.bpsFee} bps`} />
+          <Stat label="Protocol share" value={`${config.protocolFee}%`} />
+          <Stat label="Oracle threshold" value={String(config.oracleThreshold)} />
+          <div className="flex flex-col gap-0.5 w-full">
+            <p className="text-xs text-gray">Protocol fee recipient</p>
+            <p className="font-mono text-xs text-primary break-all">
+              {bytesToPublicId(config.protocolFeeRecipientBytes)}
+            </p>
+          </div>
+          <div className="flex flex-col gap-0.5 w-full">
+            <p className="text-xs text-gray">Oracle fee recipient</p>
+            <p className="font-mono text-xs text-primary break-all">
+              {bytesToPublicId(config.oracleFeeRecipientBytes)}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <p className="text-xs font-semibold text-gray uppercase tracking-wide">
@@ -372,7 +584,7 @@ function QubicAdminPanel({
 
       <AdminActionForm
         title="Edit Fee Parameters"
-        description="Update fee recipients and basis points."
+        description="Update fee recipients and basis points. Zero values are ignored."
         onSubmit={() =>
           qubicAdmin.editFeeParameters(
             protocolFeeRecipient.trim(),
@@ -400,15 +612,15 @@ function QubicAdminPanel({
         />
         <div className="grid grid-cols-2 gap-2">
           <AdminInput
-            label="BPS fee (0–10000)"
+            label="BPS fee (0–1000)"
             value={bpsFee}
             onChange={setBpsFee}
             type="number"
             min={0}
-            max={10000}
+            max={1000}
           />
           <AdminInput
-            label="Protocol fee BPS-of-BPS (0–100)"
+            label="Protocol share % (0–100)"
             value={protocolFee}
             onChange={setProtocolFee}
             type="number"
@@ -427,11 +639,17 @@ export default function AdminPage() {
 
   const {
     solanaAdmin,
+    solanaProtocolFeeRecipient,
+    solanaTokenMint,
     solanaPaused,
+    solanaOwedProtocolFee,
+    solanaBpsFee,
+    solanaProtocolFeeBps,
     solanaOracles,
     solanaPausers,
     isSolanaAdmin,
     isSolanaPauser,
+    isSolanaProtocolFeeRecipient,
     isQubicAdmin,
     isQubicPauser,
     qubicOracles,
@@ -444,6 +662,7 @@ export default function AdminPage() {
   return (
     <div className={cn("flex w-full flex-col gap-8", "p-0 py-8 xl:p-8")}>
       <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-primary">Admin Panel</h1>
         <button
           onClick={refresh}
           className="text-xs text-gray hover:text-primary transition-colors"
@@ -465,6 +684,7 @@ export default function AdminPage() {
                 <div className="flex flex-wrap gap-1.5">
                   <RoleBadge label="Admin" active={isSolanaAdmin} />
                   <RoleBadge label="Pauser" active={isSolanaPauser} />
+                  <RoleBadge label="Fee recipient" active={isSolanaProtocolFeeRecipient} />
                 </div>
                 {solanaAdmin && (
                   <p className="text-xs text-gray">
@@ -496,14 +716,16 @@ export default function AdminPage() {
 
         {qubicConfig && (
           <div className="mt-1 flex flex-wrap gap-4 border-t border-gray/20 pt-3">
-            <Stat label="Oracle threshold" value={String(qubicConfig.oracleThreshold)} />
-            <Stat label="BPS fee" value={String(qubicConfig.bpsFee)} />
-            <Stat label="Protocol fee" value={String(qubicConfig.protocolFee)} />
             <Stat label="Order era" value={String(qubicConfig.orderEra)} />
             <Stat
               label="Qubic bridge"
               value={qubicConfig.paused ? "Paused" : "Active"}
               highlight={qubicConfig.paused ? "warn" : "ok"}
+            />
+            <Stat
+              label="Solana bridge"
+              value={solanaPaused ? "Paused" : "Active"}
+              highlight={solanaPaused ? "warn" : "ok"}
             />
           </div>
         )}
@@ -516,6 +738,13 @@ export default function AdminPage() {
             oracles={solanaOracles}
             pausers={solanaPausers}
             paused={solanaPaused}
+            owedProtocolFee={solanaOwedProtocolFee}
+            protocolFeeRecipient={solanaProtocolFeeRecipient}
+            tokenMint={solanaTokenMint}
+            bpsFee={solanaBpsFee}
+            protocolFeeBpsOfBps={solanaProtocolFeeBps}
+            isSolanaAdmin={isSolanaAdmin}
+            isSolanaProtocolFeeRecipient={isSolanaProtocolFeeRecipient}
             onRolesChanged={refresh}
           />
         </div>
@@ -528,6 +757,7 @@ export default function AdminPage() {
             oracles={qubicOracles}
             pausers={qubicPausers}
             paused={qubicConfig?.paused ?? false}
+            config={qubicConfig}
             onRolesChanged={refresh}
           />
         </div>

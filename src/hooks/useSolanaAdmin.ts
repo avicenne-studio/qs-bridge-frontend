@@ -10,6 +10,8 @@ import {
   createPauseInstruction,
   createUnpauseInstruction,
 } from "@/lib/bridge/solana/instructions/pause-unpause";
+import { createClaimProtocolFeeInstruction } from "@/lib/bridge/solana/instructions/claim-protocol-fee";
+import { createClaimOracleFeeInstruction } from "@/lib/bridge/solana/instructions/claim-oracle-fee";
 import { useSolanaProvider } from "./useSolanaProvider";
 import useSolanaWallet from "./useSolanaWallet";
 import type { TxResult } from "@/lib/bridge/types";
@@ -21,6 +23,8 @@ export interface SolanaAdminActions {
   removePauser: (pauserPubkey: string) => Promise<TxResult>;
   pause: () => Promise<TxResult>;
   unpause: () => Promise<TxResult>;
+  claimProtocolFee: (tokenMint: string) => Promise<TxResult>;
+  claimOracleFee: (oracleOwner: string, tokenMint: string) => Promise<TxResult>;
   loading: boolean;
   error: string | null;
 }
@@ -111,5 +115,39 @@ export function useSolanaAdmin(): SolanaAdminActions {
     [provider, address],
   );
 
-  return { addOracle, removeOracle, addPauser, removePauser, pause, unpause, loading, error };
+  const claimProtocolFee = useCallback(
+    (tokenMint: string) =>
+      run(async () => {
+        const recipient = new PublicKey(address!);
+        const mint = new PublicKey(tokenMint);
+        const ix = createClaimProtocolFeeInstruction(recipient, mint);
+        return sendTransaction(provider!, solanaConnection, ix, recipient);
+      }),
+    [provider, address],
+  );
+
+  const claimOracleFee = useCallback(
+    (oracleOwner: string, tokenMint: string) =>
+      run(async () => {
+        const claimer = new PublicKey(address!);
+        const owner = new PublicKey(oracleOwner);
+        const mint = new PublicKey(tokenMint);
+        const ix = createClaimOracleFeeInstruction(claimer, owner, mint);
+        return sendTransaction(provider!, solanaConnection, ix, claimer);
+      }),
+    [provider, address],
+  );
+
+  return {
+    addOracle,
+    removeOracle,
+    addPauser,
+    removePauser,
+    pause,
+    unpause,
+    claimProtocolFee,
+    claimOracleFee,
+    loading,
+    error,
+  };
 }
