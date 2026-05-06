@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import cn from "@/utils/classnames";
 import { useAdminRoles, type SolanaOracle } from "@/hooks/useAdminRoles";
 import { useSolanaAdmin } from "@/hooks/useSolanaAdmin";
 import { useQubicAdmin } from "@/hooks/useQubicAdmin";
-import { QUBIC_ROLE_ORACLE, QUBIC_ROLE_PAUSER, bytesToPublicId } from "@/lib/bridge/qubic/admin-payloads";
+import {
+  QUBIC_ROLE_ORACLE,
+  QUBIC_ROLE_PAUSER,
+  bytesToPublicId,
+} from "@/lib/bridge/qubic/admin-payloads";
 import useSolanaWallet from "@/hooks/useSolanaWallet";
 import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import AdminActionForm from "./components/admin-action-form";
@@ -88,6 +92,8 @@ function AddressTable({
   );
 }
 
+type TxLink = { signature?: string; explorerUrl?: string };
+
 function OracleTable({
   oracles,
   connectedAddress,
@@ -100,12 +106,13 @@ function OracleTable({
   connectedAddress: string | null;
   isSolanaAdmin: boolean;
   tokenMint: string | null;
-  onRemove?: (pubkey: string) => Promise<unknown>;
-  onClaim?: (pubkey: string) => Promise<unknown>;
+  onRemove?: (pubkey: string) => Promise<TxLink>;
+  onClaim?: (pubkey: string) => Promise<TxLink>;
 }) {
   const [removing, setRemoving] = useState<string | null>(null);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [lastTx, setLastTx] = useState<TxLink | null>(null);
 
   if (oracles.length === 0) {
     return <p className="text-xs text-gray italic">No oracles</p>;
@@ -114,12 +121,14 @@ function OracleTable({
   async function handleAction(
     key: string,
     setActive: (v: string | null) => void,
-    fn: () => Promise<unknown>,
+    fn: () => Promise<TxLink>,
   ) {
     setActive(key);
     setErrors((prev) => ({ ...prev, [key]: "" }));
+    setLastTx(null);
     try {
-      await fn();
+      const result = await fn();
+      setLastTx(result);
     } catch (err) {
       setErrors((prev) => ({
         ...prev,
@@ -131,64 +140,74 @@ function OracleTable({
   }
 
   return (
-    <ul className="flex flex-col divide-y divide-gray/10">
-      {oracles.map(({ pubkey, claimableBalance }) => {
-        const canClaim =
-          tokenMint !== null &&
-          claimableBalance > 0n &&
-          (connectedAddress === pubkey || isSolanaAdmin);
+    <div className="flex flex-col gap-2">
+      <ul className="flex flex-col divide-y divide-gray/10">
+        {oracles.map(({ pubkey, claimableBalance }) => {
+          const canClaim =
+            tokenMint !== null &&
+            claimableBalance > 0n &&
+            (connectedAddress === pubkey || isSolanaAdmin);
 
-        return (
-          <li key={pubkey} className="flex flex-col gap-0.5 py-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-mono text-xs text-primary break-all flex-1">{pubkey}</span>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {errors[pubkey] && (
-                  <span className="text-xs text-rose-500">{errors[pubkey]}</span>
-                )}
-                {canClaim && onClaim && (
-                  <button
-                    onClick={() =>
-                      handleAction(pubkey + ":claim", setClaiming, () => onClaim(pubkey))
-                    }
-                    disabled={claiming === pubkey + ":claim"}
-                    className="text-xs text-highlight hover:opacity-80 transition-opacity disabled:opacity-40 font-medium"
-                  >
-                    {claiming === pubkey + ":claim" ? (
-                      <Loader2 size={13} className="animate-spin" />
-                    ) : (
-                      "Claim"
-                    )}
-                  </button>
-                )}
-                {onRemove && (
-                  <button
-                    onClick={() =>
-                      handleAction(pubkey, setRemoving, () => onRemove(pubkey))
-                    }
-                    disabled={removing === pubkey}
-                    className="text-gray hover:text-rose-500 transition-colors disabled:opacity-40"
-                    title="Remove"
-                  >
-                    {removing === pubkey ? (
-                      <Loader2 size={13} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={13} />
-                    )}
-                  </button>
-                )}
+          return (
+            <li key={pubkey} className="flex flex-col gap-0.5 py-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-xs text-primary break-all flex-1">{pubkey}</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {errors[pubkey] && (
+                    <span className="text-xs text-rose-500">{errors[pubkey]}</span>
+                  )}
+                  {canClaim && onClaim && (
+                    <button
+                      onClick={() =>
+                        handleAction(pubkey + ":claim", setClaiming, () => onClaim(pubkey))
+                      }
+                      disabled={claiming === pubkey + ":claim"}
+                      className="text-xs text-highlight hover:opacity-80 transition-opacity disabled:opacity-40 font-medium"
+                    >
+                      {claiming === pubkey + ":claim" ? (
+                        <Loader2 size={13} className="animate-spin" />
+                      ) : (
+                        "Claim"
+                      )}
+                    </button>
+                  )}
+                  {onRemove && (
+                    <button
+                      onClick={() => handleAction(pubkey, setRemoving, () => onRemove(pubkey))}
+                      disabled={removing === pubkey}
+                      className="text-gray hover:text-rose-500 transition-colors disabled:opacity-40"
+                      title="Remove"
+                    >
+                      {removing === pubkey ? (
+                        <Loader2 size={13} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={13} />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-            <p className="text-xs text-gray">
-              Claimable:{" "}
-              <span className={claimableBalance > 0n ? "text-emerald-500 font-medium" : ""}>
-                {formatWQubic(claimableBalance)} wQUBIC
-              </span>
-            </p>
-          </li>
-        );
-      })}
-    </ul>
+              <p className="text-xs text-gray">
+                Claimable:{" "}
+                <span className={claimableBalance > 0n ? "text-emerald-500 font-medium" : ""}>
+                  {formatWQubic(claimableBalance)} wQUBIC
+                </span>
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+      {lastTx?.explorerUrl && (
+        <a
+          href={lastTx.explorerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+        >
+          {lastTx.signature ?? "Success"}
+        </a>
+      )}
+    </div>
   );
 }
 
@@ -222,6 +241,11 @@ function SolanaAdminPanel({
 
   const [oracleKey, setOracleKey] = useState("");
   const [pauserKey, setPauserKey] = useState("");
+  const [optimisticPaused, setOptimisticPaused] = useState<boolean | null>(null);
+  useEffect(() => {
+    setOptimisticPaused(null);
+  }, [paused]);
+  const effectivePaused = optimisticPaused ?? paused;
 
   return (
     <div className="flex flex-col gap-5">
@@ -360,14 +384,17 @@ function SolanaAdminPanel({
           title="Pause (Solana)"
           onSubmit={async () => {
             const r = await solanaAdmin.pause();
+            setOptimisticPaused(true);
             onRolesChanged();
             return r;
           }}
           submitLabel="Pause"
-          disabled={paused}
+          disabled={effectivePaused}
         >
           <p className="text-xs text-gray">
-            {paused ? "Bridge is already paused." : "Pauses all bridge transactions on Solana."}
+            {effectivePaused
+              ? "Bridge is already paused."
+              : "Pauses all bridge transactions on Solana."}
           </p>
         </AdminActionForm>
 
@@ -375,14 +402,17 @@ function SolanaAdminPanel({
           title="Unpause (Solana)"
           onSubmit={async () => {
             const r = await solanaAdmin.unpause();
+            setOptimisticPaused(false);
             onRolesChanged();
             return r;
           }}
           submitLabel="Unpause"
-          disabled={!paused}
+          disabled={!effectivePaused}
         >
           <p className="text-xs text-gray">
-            {!paused ? "Bridge is already active." : "Resumes bridge transactions on Solana."}
+            {!effectivePaused
+              ? "Bridge is already active."
+              : "Resumes bridge transactions on Solana."}
           </p>
         </AdminActionForm>
       </div>
@@ -395,12 +425,16 @@ function QubicAdminPanel({
   pausers,
   paused,
   config,
+  isQubicAdmin,
+  isQubicPauser,
   onRolesChanged,
 }: {
   oracles: string[];
   pausers: string[];
   paused: boolean;
   config: QubicConfig | null;
+  isQubicAdmin: boolean;
+  isQubicPauser: boolean;
   onRolesChanged: () => void;
 }) {
   const qubicAdmin = useQubicAdmin();
@@ -409,12 +443,24 @@ function QubicAdminPanel({
   const [addRoleType, setAddRoleType] = useState<number>(QUBIC_ROLE_ORACLE);
   const [removeRoleAddr, setRemoveRoleAddr] = useState("");
   const [removeRoleType, setRemoveRoleType] = useState<number>(QUBIC_ROLE_ORACLE);
+  const [optimisticPaused, setOptimisticPaused] = useState<boolean | null>(null);
+  useEffect(() => {
+    setOptimisticPaused(null);
+  }, [paused]);
+  const effectivePaused = optimisticPaused ?? paused;
   const [newAdmin, setNewAdmin] = useState("");
-  const [threshold, setThreshold] = useState("1");
+  const [threshold, setThreshold] = useState("");
   const [protocolFeeRecipient, setProtocolFeeRecipient] = useState("");
   const [oracleFeeRecipient, setOracleFeeRecipient] = useState("");
-  const [bpsFee, setBpsFee] = useState("100");
-  const [protocolFee, setProtocolFee] = useState("1000");
+  const [bpsFee, setBpsFee] = useState("");
+  const [protocolFee, setProtocolFee] = useState("");
+
+  useEffect(() => {
+    if (!config) return;
+    setThreshold(String(config.oracleThreshold));
+    setBpsFee(String(config.bpsFee));
+    setProtocolFee(String(config.protocolFee));
+  }, [config]);
 
   const roleOptions = [
     { value: QUBIC_ROLE_ORACLE, label: "Oracle" },
@@ -478,157 +524,183 @@ function QubicAdminPanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <AdminActionForm
-          title="Add Role"
-          onSubmit={async () => {
-            const r = await qubicAdmin.addRole(addRoleAddr.trim(), addRoleType);
-            onRolesChanged();
-            return r;
-          }}
-          submitLabel="Add Role"
-          disabled={addRoleAddr.trim().length !== 60}
-        >
-          <AdminInput
-            label="Account (Qubic publicId, 60 chars)"
-            value={addRoleAddr}
-            onChange={setAddRoleAddr}
-            placeholder="AAAAAAA..."
-          />
-          <RoleSelect value={addRoleType} onChange={setAddRoleType} />
-        </AdminActionForm>
+      {(isQubicAdmin || isQubicPauser) && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <AdminActionForm
+            title="Pause (Qubic)"
+            onSubmit={async () => {
+              const r = await qubicAdmin.pause();
+              setOptimisticPaused(true);
+              onRolesChanged();
+              return r;
+            }}
+            submitLabel="Pause"
+            disabled={effectivePaused}
+          >
+            <p className="text-xs text-gray">
+              {effectivePaused
+                ? "Bridge is already paused."
+                : "Pauses all bridge transactions on Qubic."}
+            </p>
+          </AdminActionForm>
 
-        <AdminActionForm
-          title="Remove Role"
-          onSubmit={async () => {
-            const r = await qubicAdmin.removeRole(removeRoleAddr.trim(), removeRoleType);
-            onRolesChanged();
-            return r;
-          }}
-          submitLabel="Remove Role"
-          disabled={removeRoleAddr.trim().length !== 60}
-        >
-          <AdminInput
-            label="Account (Qubic publicId, 60 chars)"
-            value={removeRoleAddr}
-            onChange={setRemoveRoleAddr}
-            placeholder="AAAAAAA..."
-          />
-          <RoleSelect value={removeRoleType} onChange={setRemoveRoleType} />
-        </AdminActionForm>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <AdminActionForm
-          title="Pause (Qubic)"
-          onSubmit={async () => {
-            const r = await qubicAdmin.pause();
-            onRolesChanged();
-            return r;
-          }}
-          submitLabel="Pause"
-          disabled={paused}
-        >
-          <p className="text-xs text-gray">
-            {paused ? "Bridge is already paused." : "Pauses all bridge transactions on Qubic."}
-          </p>
-        </AdminActionForm>
-
-        <AdminActionForm
-          title="Unpause (Qubic)"
-          onSubmit={async () => {
-            const r = await qubicAdmin.unpause();
-            onRolesChanged();
-            return r;
-          }}
-          submitLabel="Unpause"
-          disabled={!paused}
-        >
-          <p className="text-xs text-gray">
-            {!paused ? "Bridge is already active." : "Resumes bridge transactions on Qubic."}
-          </p>
-        </AdminActionForm>
-      </div>
-
-      <AdminActionForm
-        title="Transfer Admin"
-        description="Transfers Qubic contract admin rights to another address."
-        onSubmit={() => qubicAdmin.transferAdmin(newAdmin.trim())}
-        submitLabel="Transfer Admin"
-        disabled={newAdmin.trim().length !== 60}
-      >
-        <AdminInput
-          label="New admin (Qubic publicId, 60 chars)"
-          value={newAdmin}
-          onChange={setNewAdmin}
-          placeholder="AAAAAAA..."
-        />
-      </AdminActionForm>
-
-      <AdminActionForm
-        title="Edit Oracle Threshold"
-        description="Minimum number of oracle signatures required to process a transfer."
-        onSubmit={() => qubicAdmin.editThreshold(Number(threshold))}
-        submitLabel="Set Threshold"
-        disabled={!threshold || Number(threshold) < 1}
-      >
-        <AdminInput
-          label="New threshold"
-          value={threshold}
-          onChange={setThreshold}
-          type="number"
-          min={1}
-          max={255}
-        />
-      </AdminActionForm>
-
-      <AdminActionForm
-        title="Edit Fee Parameters"
-        description="Update fee recipients and basis points. Zero values are ignored."
-        onSubmit={() =>
-          qubicAdmin.editFeeParameters(
-            protocolFeeRecipient.trim(),
-            oracleFeeRecipient.trim(),
-            Number(bpsFee),
-            Number(protocolFee),
-          )
-        }
-        submitLabel="Update Fees"
-        disabled={
-          protocolFeeRecipient.trim().length !== 60 || oracleFeeRecipient.trim().length !== 60
-        }
-      >
-        <AdminInput
-          label="Protocol fee recipient (Qubic publicId)"
-          value={protocolFeeRecipient}
-          onChange={setProtocolFeeRecipient}
-          placeholder="AAAAAAA..."
-        />
-        <AdminInput
-          label="Oracle fee recipient (Qubic publicId)"
-          value={oracleFeeRecipient}
-          onChange={setOracleFeeRecipient}
-          placeholder="AAAAAAA..."
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <AdminInput
-            label="BPS fee (0–1000)"
-            value={bpsFee}
-            onChange={setBpsFee}
-            type="number"
-            min={0}
-            max={1000}
-          />
-          <AdminInput
-            label="Protocol share % (0–100)"
-            value={protocolFee}
-            onChange={setProtocolFee}
-            type="number"
-            min={0}
-            max={100}
-          />
+          <AdminActionForm
+            title="Unpause (Qubic)"
+            onSubmit={async () => {
+              const r = await qubicAdmin.unpause();
+              setOptimisticPaused(false);
+              onRolesChanged();
+              return r;
+            }}
+            submitLabel="Unpause"
+            disabled={!effectivePaused}
+          >
+            <p className="text-xs text-gray">
+              {!effectivePaused
+                ? "Bridge is already active."
+                : "Resumes bridge transactions on Qubic."}
+            </p>
+          </AdminActionForm>
         </div>
-      </AdminActionForm>
+      )}
+
+      {isQubicAdmin && (
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <AdminActionForm
+              title="Add Role"
+              onSubmit={async () => {
+                const r = await qubicAdmin.addRole(addRoleAddr.trim(), addRoleType);
+                onRolesChanged();
+                return r;
+              }}
+              submitLabel="Add Role"
+              disabled={addRoleAddr.trim().length !== 60}
+            >
+              <AdminInput
+                label="Account (Qubic publicId, 60 chars)"
+                value={addRoleAddr}
+                onChange={setAddRoleAddr}
+                placeholder="AAAAAAA..."
+              />
+              <RoleSelect value={addRoleType} onChange={setAddRoleType} />
+            </AdminActionForm>
+
+            <AdminActionForm
+              title="Remove Role"
+              onSubmit={async () => {
+                const r = await qubicAdmin.removeRole(removeRoleAddr.trim(), removeRoleType);
+                onRolesChanged();
+                return r;
+              }}
+              submitLabel="Remove Role"
+              disabled={removeRoleAddr.trim().length !== 60}
+            >
+              <AdminInput
+                label="Account (Qubic publicId, 60 chars)"
+                value={removeRoleAddr}
+                onChange={setRemoveRoleAddr}
+                placeholder="AAAAAAA..."
+              />
+              <RoleSelect value={removeRoleType} onChange={setRemoveRoleType} />
+            </AdminActionForm>
+          </div>
+
+          <AdminActionForm
+            title="Transfer Admin"
+            description="Transfers Qubic contract admin rights to another address."
+            onSubmit={async () => {
+              const r = await qubicAdmin.transferAdmin(newAdmin.trim());
+              onRolesChanged();
+              return r;
+            }}
+            submitLabel="Transfer Admin"
+            disabled={newAdmin.trim().length !== 60}
+          >
+            <AdminInput
+              label="New admin (Qubic publicId, 60 chars)"
+              value={newAdmin}
+              onChange={setNewAdmin}
+              placeholder="AAAAAAA..."
+            />
+          </AdminActionForm>
+
+          <AdminActionForm
+            title="Edit Oracle Threshold"
+            description="Minimum number of oracle signatures required to process a transfer."
+            onSubmit={async () => {
+              const r = await qubicAdmin.editThreshold(Number(threshold));
+              onRolesChanged();
+              return r;
+            }}
+            submitLabel="Set Threshold"
+            disabled={!threshold || Number(threshold) < 1}
+          >
+            <AdminInput
+              label="New threshold"
+              value={threshold}
+              onChange={setThreshold}
+              type="number"
+              min={1}
+              max={255}
+            />
+          </AdminActionForm>
+
+          <AdminActionForm
+            title="Edit Fee Parameters"
+            description="Leave an address blank to keep the current recipient. Set bps/share to 0 to keep current."
+            onSubmit={async () => {
+              const ZERO_ID = "A".repeat(60);
+              const r = await qubicAdmin.editFeeParameters(
+                protocolFeeRecipient.trim() || ZERO_ID,
+                oracleFeeRecipient.trim() || ZERO_ID,
+                Number(bpsFee),
+                Number(protocolFee),
+              );
+              onRolesChanged();
+              return r;
+            }}
+            submitLabel="Update Fees"
+            disabled={
+              (protocolFeeRecipient.trim() !== "" && protocolFeeRecipient.trim().length !== 60) ||
+              (oracleFeeRecipient.trim() !== "" && oracleFeeRecipient.trim().length !== 60) ||
+              bpsFee === "" ||
+              protocolFee === ""
+            }
+          >
+            <AdminInput
+              label="Protocol fee recipient (leave blank to keep current)"
+              value={protocolFeeRecipient}
+              onChange={setProtocolFeeRecipient}
+              placeholder="AAAAAAA... (optional)"
+            />
+            <AdminInput
+              label="Oracle fee recipient (leave blank to keep current)"
+              value={oracleFeeRecipient}
+              onChange={setOracleFeeRecipient}
+              placeholder="AAAAAAA... (optional)"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <AdminInput
+                label="BPS fee (0–10000)"
+                value={bpsFee}
+                onChange={setBpsFee}
+                type="number"
+                min={0}
+                max={10000}
+              />
+              <AdminInput
+                label="Protocol share % (0–100)"
+                value={protocolFee}
+                onChange={setProtocolFee}
+                type="number"
+                min={0}
+                max={100}
+              />
+            </div>
+          </AdminActionForm>
+        </>
+      )}
     </div>
   );
 }
@@ -662,7 +734,6 @@ export default function AdminPage() {
   return (
     <div className={cn("flex w-full flex-col gap-8", "p-0 py-8 xl:p-8")}>
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-primary">Admin Panel</h1>
         <button
           onClick={refresh}
           className="text-xs text-gray hover:text-primary transition-colors"
@@ -758,6 +829,8 @@ export default function AdminPage() {
             pausers={qubicPausers}
             paused={qubicConfig?.paused ?? false}
             config={qubicConfig}
+            isQubicAdmin={isQubicAdmin}
+            isQubicPauser={isQubicPauser}
             onRolesChanged={refresh}
           />
         </div>

@@ -229,9 +229,7 @@ export function useAdminRoles(): AdminRoles {
 
         if (qubicConnected && qubicAddress) {
           const accountBytes = publicIdToBytes(qubicAddress as string);
-          const isAdmin = cfg.adminBytes.every(
-            (b: number, i: number) => b === accountBytes[i],
-          );
+          const isAdmin = cfg.adminBytes.every((b: number, i: number) => b === accountBytes[i]);
           if (!cancelled) setIsQubicAdmin(isAdmin);
 
           try {
