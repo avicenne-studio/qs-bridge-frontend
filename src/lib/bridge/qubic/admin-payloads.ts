@@ -60,6 +60,20 @@ export function buildEditFeeParametersPayload(
   return bytes;
 }
 
+// Converts 32 raw bytes to a 60-char Qubic publicId string (base-26 LE, uppercase).
+export function bytesToPublicId(bytes: Uint8Array): string {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let result = "";
+  for (let i = 0; i < 4; i++) {
+    let value = view.getBigUint64(i * 8, true);
+    for (let j = 0; j < 14; j++) {
+      result += String.fromCharCode(Number(value % 26n) + 65);
+      value /= 26n;
+    }
+  }
+  return result;
+}
+
 // Converts a Qubic publicId string (60 chars, upper or lower case) to 32-byte public key.
 // Implements the same base-26 decoding as QubicHelper.getIdentityBytes.
 export function publicIdToBytes(publicId: string): Uint8Array {

@@ -60,8 +60,8 @@ export default function AdminActionForm({
           disabled={disabled || loading}
           className={cn(
             "rounded px-3 py-1.5 text-sm font-medium transition-colors",
-            "bg-accent text-primary-dark",
-            "hover:bg-accent/80 disabled:opacity-40 disabled:cursor-not-allowed",
+            "bg-highlight text-primary",
+            "hover:bg-highlight/80 disabled:opacity-40 disabled:cursor-not-allowed",
           )}
         >
           {loading ? (

@@ -4,6 +4,8 @@ import { solanaConnection } from "@/lib/bridge/solana/connection";
 import { sendTransaction } from "@/lib/bridge/solana/send";
 import { createAddPauserInstruction } from "@/lib/bridge/solana/instructions/add-pauser";
 import { createRemovePauserInstruction } from "@/lib/bridge/solana/instructions/remove-pauser";
+import { createAddOracleInstruction } from "@/lib/bridge/solana/instructions/add-oracle";
+import { createRemoveOracleInstruction } from "@/lib/bridge/solana/instructions/remove-oracle";
 import {
   createPauseInstruction,
   createUnpauseInstruction,
@@ -13,6 +15,8 @@ import useSolanaWallet from "./useSolanaWallet";
 import type { TxResult } from "@/lib/bridge/types";
 
 export interface SolanaAdminActions {
+  addOracle: (oraclePubkey: string) => Promise<TxResult>;
+  removeOracle: (oraclePubkey: string) => Promise<TxResult>;
   addPauser: (pauserPubkey: string) => Promise<TxResult>;
   removePauser: (pauserPubkey: string) => Promise<TxResult>;
   pause: () => Promise<TxResult>;
@@ -42,6 +46,28 @@ export function useSolanaAdmin(): SolanaAdminActions {
       setLoading(false);
     }
   }
+
+  const addOracle = useCallback(
+    (oraclePubkey: string) =>
+      run(async () => {
+        const admin = new PublicKey(address!);
+        const oracle = new PublicKey(oraclePubkey);
+        const ix = createAddOracleInstruction(admin, oracle);
+        return sendTransaction(provider!, solanaConnection, ix, admin);
+      }),
+    [provider, address],
+  );
+
+  const removeOracle = useCallback(
+    (oraclePubkey: string) =>
+      run(async () => {
+        const admin = new PublicKey(address!);
+        const oracle = new PublicKey(oraclePubkey);
+        const ix = createRemoveOracleInstruction(admin, oracle);
+        return sendTransaction(provider!, solanaConnection, ix, admin);
+      }),
+    [provider, address],
+  );
 
   const addPauser = useCallback(
     (pauserPubkey: string) =>
@@ -85,5 +111,5 @@ export function useSolanaAdmin(): SolanaAdminActions {
     [provider, address],
   );
 
-  return { addPauser, removePauser, pause, unpause, loading, error };
+  return { addOracle, removeOracle, addPauser, removePauser, pause, unpause, loading, error };
 }

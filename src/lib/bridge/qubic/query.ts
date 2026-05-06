@@ -1,4 +1,5 @@
 import { QSB_CONTRACT_INDEX, QUBIC_NODE_RPC_URL } from "./constants";
+import { bytesToPublicId } from "./admin-payloads";
 
 function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
@@ -78,4 +79,26 @@ export async function queryIsOracle(accountBytes: Uint8Array): Promise<boolean> 
 export async function queryIsPauser(accountBytes: Uint8Array): Promise<boolean> {
   const data = await queryQubicFunction(3, accountBytes.slice(0, 32));
   return data[0] !== 0;
+}
+
+// GetOracles (fn 7): output = uint32 count + id[64] accounts
+export async function queryGetOracles(): Promise<string[]> {
+  const data = await queryQubicFunction(7);
+  const count = new DataView(data.buffer, data.byteOffset).getUint32(0, true);
+  const result: string[] = [];
+  for (let i = 0; i < count && i < 64; i++) {
+    result.push(bytesToPublicId(data.slice(4 + i * 32, 4 + (i + 1) * 32)));
+  }
+  return result;
+}
+
+// GetPausers (fn 8): output = uint32 count + id[32] accounts
+export async function queryGetPausers(): Promise<string[]> {
+  const data = await queryQubicFunction(8);
+  const count = new DataView(data.buffer, data.byteOffset).getUint32(0, true);
+  const result: string[] = [];
+  for (let i = 0; i < count && i < 32; i++) {
+    result.push(bytesToPublicId(data.slice(4 + i * 32, 4 + (i + 1) * 32)));
+  }
+  return result;
 }

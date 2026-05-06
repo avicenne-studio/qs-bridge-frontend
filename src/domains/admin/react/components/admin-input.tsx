@@ -33,8 +33,8 @@ export default function AdminInput({
         max={max}
         step={step}
         className={cn(
-          "rounded border border-white/12 bg-primary-dark px-2.5 py-1.5 text-xs text-primary",
-          "placeholder:text-gray/50 focus:outline-none focus:border-accent/60",
+          "rounded border border-gray/30 bg-white/80 px-2.5 py-1.5 text-xs text-primary",
+          "placeholder:text-gray/50 focus:outline-none focus:border-highlight/60",
           "font-mono",
         )}
       />

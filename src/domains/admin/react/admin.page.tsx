@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import cn from "@/utils/classnames";
 import { useAdminRoles } from "@/hooks/useAdminRoles";
 import { useSolanaAdmin } from "@/hooks/useSolanaAdmin";
@@ -13,87 +13,204 @@ import RoleBadge from "./components/role-badge";
 
 function SectionTitle({ children }: { children: string }) {
   return (
-    <h2 className="text-sm font-semibold uppercase tracking-wider text-gray border-b border-white/8 pb-2">
+    <h2 className="text-sm font-semibold uppercase tracking-wider text-gray border-b border-gray/20 pb-2">
       {children}
     </h2>
   );
 }
 
-function SolanaAdminPanel({
-  isSolanaAdmin,
-  isSolanaPauser,
+function AddressTable({
+  addresses,
+  emptyLabel,
+  onRemove,
 }: {
-  isSolanaAdmin: boolean;
-  isSolanaPauser: boolean;
+  addresses: string[];
+  emptyLabel: string;
+  onRemove?: (addr: string) => Promise<unknown>;
+}) {
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  if (addresses.length === 0) {
+    return <p className="text-xs text-gray italic">{emptyLabel}</p>;
+  }
+
+  async function handleRemove(addr: string) {
+    if (!onRemove) return;
+    setRemoving(addr);
+    setErrors((prev) => ({ ...prev, [addr]: "" }));
+    try {
+      await onRemove(addr);
+    } catch (err) {
+      setErrors((prev) => ({
+        ...prev,
+        [addr]: err instanceof Error ? err.message : "Failed",
+      }));
+    } finally {
+      setRemoving(null);
+    }
+  }
+
+  return (
+    <ul className="flex flex-col divide-y divide-gray/10">
+      {addresses.map((addr) => (
+        <li key={addr} className="flex items-center justify-between gap-2 py-1.5">
+          <span className="font-mono text-xs text-primary break-all flex-1">{addr}</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {errors[addr] && <span className="text-xs text-rose-500">{errors[addr]}</span>}
+            {onRemove && (
+              <button
+                onClick={() => handleRemove(addr)}
+                disabled={removing === addr}
+                className="text-gray hover:text-rose-500 transition-colors disabled:opacity-40"
+                title="Remove"
+              >
+                {removing === addr ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Trash2 size={13} />
+                )}
+              </button>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SolanaAdminPanel({
+  oracles,
+  pausers,
+  paused,
+  onRolesChanged,
+}: {
+  oracles: string[];
+  pausers: string[];
+  paused: boolean;
+  onRolesChanged: () => void;
 }) {
   const solanaAdmin = useSolanaAdmin();
 
+  const [oracleKey, setOracleKey] = useState("");
   const [pauserKey, setPauserKey] = useState("");
-  const [removePauserKey, setRemovePauserKey] = useState("");
 
   return (
-    <div className="flex flex-col gap-3">
-      {isSolanaAdmin && (
-        <>
-          <AdminActionForm
-            title="Add Pauser"
-            onSubmit={() => solanaAdmin.addPauser(pauserKey.trim())}
-            submitLabel="Add Pauser"
-            disabled={!pauserKey.trim()}
-          >
-            <AdminInput
-              label="Pauser Solana address (base58)"
-              value={pauserKey}
-              onChange={setPauserKey}
-              placeholder="Pubkey..."
-            />
-          </AdminActionForm>
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-semibold text-gray uppercase tracking-wide">
+            Oracles ({oracles.length})
+          </p>
+          <AddressTable
+            addresses={oracles}
+            emptyLabel="No oracles"
+            onRemove={async (addr) => {
+              const r = await solanaAdmin.removeOracle(addr);
+              onRolesChanged();
+              return r;
+            }}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-semibold text-gray uppercase tracking-wide">
+            Pausers ({pausers.length})
+          </p>
+          <AddressTable
+            addresses={pausers}
+            emptyLabel="No pausers"
+            onRemove={async (addr) => {
+              const r = await solanaAdmin.removePauser(addr);
+              onRolesChanged();
+              return r;
+            }}
+          />
+        </div>
+      </div>
 
-          <AdminActionForm
-            title="Remove Pauser"
-            onSubmit={() => solanaAdmin.removePauser(removePauserKey.trim())}
-            submitLabel="Remove Pauser"
-            disabled={!removePauserKey.trim()}
-          >
-            <AdminInput
-              label="Pauser Solana address (base58)"
-              value={removePauserKey}
-              onChange={setRemovePauserKey}
-              placeholder="Pubkey..."
-            />
-          </AdminActionForm>
-        </>
-      )}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <AdminActionForm
+          title="Add Oracle"
+          onSubmit={async () => {
+            const r = await solanaAdmin.addOracle(oracleKey.trim());
+            onRolesChanged();
+            return r;
+          }}
+          submitLabel="Add Oracle"
+          disabled={!oracleKey.trim()}
+        >
+          <AdminInput
+            label="Oracle Solana address (base58)"
+            value={oracleKey}
+            onChange={setOracleKey}
+            placeholder="Pubkey..."
+          />
+        </AdminActionForm>
 
-      {isSolanaPauser && (
-        <>
-          <AdminActionForm
-            title="Pause (Solana)"
-            onSubmit={async () => solanaAdmin.pause()}
-            submitLabel="Pause"
-          >
-            <p className="text-xs text-gray">Pauses all bridge transactions on Solana.</p>
-          </AdminActionForm>
+        <AdminActionForm
+          title="Add Pauser"
+          onSubmit={async () => {
+            const r = await solanaAdmin.addPauser(pauserKey.trim());
+            onRolesChanged();
+            return r;
+          }}
+          submitLabel="Add Pauser"
+          disabled={!pauserKey.trim()}
+        >
+          <AdminInput
+            label="Pauser Solana address (base58)"
+            value={pauserKey}
+            onChange={setPauserKey}
+            placeholder="Pubkey..."
+          />
+        </AdminActionForm>
+      </div>
 
-          <AdminActionForm
-            title="Unpause (Solana)"
-            onSubmit={async () => solanaAdmin.unpause()}
-            submitLabel="Unpause"
-          >
-            <p className="text-xs text-gray">Resumes bridge transactions on Solana.</p>
-          </AdminActionForm>
-        </>
-      )}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <AdminActionForm
+          title="Pause (Solana)"
+          onSubmit={async () => {
+            const r = await solanaAdmin.pause();
+            onRolesChanged();
+            return r;
+          }}
+          submitLabel="Pause"
+          disabled={paused}
+        >
+          <p className="text-xs text-gray">
+            {paused ? "Bridge is already paused." : "Pauses all bridge transactions on Solana."}
+          </p>
+        </AdminActionForm>
+
+        <AdminActionForm
+          title="Unpause (Solana)"
+          onSubmit={async () => {
+            const r = await solanaAdmin.unpause();
+            onRolesChanged();
+            return r;
+          }}
+          submitLabel="Unpause"
+          disabled={!paused}
+        >
+          <p className="text-xs text-gray">
+            {!paused ? "Bridge is already active." : "Resumes bridge transactions on Solana."}
+          </p>
+        </AdminActionForm>
+      </div>
     </div>
   );
 }
 
 function QubicAdminPanel({
-  isQubicAdmin,
-  isQubicPauser,
+  oracles,
+  pausers,
+  paused,
+  onRolesChanged,
 }: {
-  isQubicAdmin: boolean;
-  isQubicPauser: boolean;
+  oracles: string[];
+  pausers: string[];
+  paused: boolean;
+  onRolesChanged: () => void;
 }) {
   const qubicAdmin = useQubicAdmin();
 
@@ -120,7 +237,7 @@ function QubicAdminPanel({
         <select
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="rounded border border-white/12 bg-primary-dark px-2.5 py-1.5 text-xs text-primary focus:outline-none focus:border-accent/60"
+          className="rounded border border-gray/30 bg-white/80 px-2.5 py-1.5 text-xs text-primary focus:outline-none focus:border-highlight/60"
         >
           {roleOptions.map((o) => (
             <option key={o.value} value={o.value}>
@@ -133,140 +250,173 @@ function QubicAdminPanel({
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {isQubicAdmin && (
-        <>
-          <AdminActionForm
-            title="Add Role"
-            onSubmit={() => qubicAdmin.addRole(addRoleAddr.trim(), addRoleType)}
-            submitLabel="Add Role"
-            disabled={addRoleAddr.trim().length !== 60}
-          >
-            <AdminInput
-              label="Account (Qubic publicId, 60 chars)"
-              value={addRoleAddr}
-              onChange={setAddRoleAddr}
-              placeholder="AAAAAAA..."
-            />
-            <RoleSelect value={addRoleType} onChange={setAddRoleType} />
-          </AdminActionForm>
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-semibold text-gray uppercase tracking-wide">
+            Oracles ({oracles.length})
+          </p>
+          <AddressTable addresses={oracles} emptyLabel="No oracles" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-semibold text-gray uppercase tracking-wide">
+            Pausers ({pausers.length})
+          </p>
+          <AddressTable addresses={pausers} emptyLabel="No pausers" />
+        </div>
+      </div>
 
-          <AdminActionForm
-            title="Remove Role"
-            onSubmit={() => qubicAdmin.removeRole(removeRoleAddr.trim(), removeRoleType)}
-            submitLabel="Remove Role"
-            disabled={removeRoleAddr.trim().length !== 60}
-          >
-            <AdminInput
-              label="Account (Qubic publicId, 60 chars)"
-              value={removeRoleAddr}
-              onChange={setRemoveRoleAddr}
-              placeholder="AAAAAAA..."
-            />
-            <RoleSelect value={removeRoleType} onChange={setRemoveRoleType} />
-          </AdminActionForm>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <AdminActionForm
+          title="Add Role"
+          onSubmit={async () => {
+            const r = await qubicAdmin.addRole(addRoleAddr.trim(), addRoleType);
+            onRolesChanged();
+            return r;
+          }}
+          submitLabel="Add Role"
+          disabled={addRoleAddr.trim().length !== 60}
+        >
+          <AdminInput
+            label="Account (Qubic publicId, 60 chars)"
+            value={addRoleAddr}
+            onChange={setAddRoleAddr}
+            placeholder="AAAAAAA..."
+          />
+          <RoleSelect value={addRoleType} onChange={setAddRoleType} />
+        </AdminActionForm>
 
-          <AdminActionForm
-            title="Transfer Admin"
-            description="Transfers Qubic contract admin rights to another address."
-            onSubmit={() => qubicAdmin.transferAdmin(newAdmin.trim())}
-            submitLabel="Transfer Admin"
-            disabled={newAdmin.trim().length !== 60}
-          >
-            <AdminInput
-              label="New admin (Qubic publicId, 60 chars)"
-              value={newAdmin}
-              onChange={setNewAdmin}
-              placeholder="AAAAAAA..."
-            />
-          </AdminActionForm>
+        <AdminActionForm
+          title="Remove Role"
+          onSubmit={async () => {
+            const r = await qubicAdmin.removeRole(removeRoleAddr.trim(), removeRoleType);
+            onRolesChanged();
+            return r;
+          }}
+          submitLabel="Remove Role"
+          disabled={removeRoleAddr.trim().length !== 60}
+        >
+          <AdminInput
+            label="Account (Qubic publicId, 60 chars)"
+            value={removeRoleAddr}
+            onChange={setRemoveRoleAddr}
+            placeholder="AAAAAAA..."
+          />
+          <RoleSelect value={removeRoleType} onChange={setRemoveRoleType} />
+        </AdminActionForm>
+      </div>
 
-          <AdminActionForm
-            title="Edit Oracle Threshold"
-            description="Minimum number of oracle signatures required to process a transfer."
-            onSubmit={() => qubicAdmin.editThreshold(Number(threshold))}
-            submitLabel="Set Threshold"
-            disabled={!threshold || Number(threshold) < 1}
-          >
-            <AdminInput
-              label="New threshold"
-              value={threshold}
-              onChange={setThreshold}
-              type="number"
-              min={1}
-              max={255}
-            />
-          </AdminActionForm>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <AdminActionForm
+          title="Pause (Qubic)"
+          onSubmit={async () => {
+            const r = await qubicAdmin.pause();
+            onRolesChanged();
+            return r;
+          }}
+          submitLabel="Pause"
+          disabled={paused}
+        >
+          <p className="text-xs text-gray">
+            {paused ? "Bridge is already paused." : "Pauses all bridge transactions on Qubic."}
+          </p>
+        </AdminActionForm>
 
-          <AdminActionForm
-            title="Edit Fee Parameters"
-            description="Update fee recipients and basis points."
-            onSubmit={() =>
-              qubicAdmin.editFeeParameters(
-                protocolFeeRecipient.trim(),
-                oracleFeeRecipient.trim(),
-                Number(bpsFee),
-                Number(protocolFee),
-              )
-            }
-            submitLabel="Update Fees"
-            disabled={
-              protocolFeeRecipient.trim().length !== 60 || oracleFeeRecipient.trim().length !== 60
-            }
-          >
-            <AdminInput
-              label="Protocol fee recipient (Qubic publicId)"
-              value={protocolFeeRecipient}
-              onChange={setProtocolFeeRecipient}
-              placeholder="AAAAAAA..."
-            />
-            <AdminInput
-              label="Oracle fee recipient (Qubic publicId)"
-              value={oracleFeeRecipient}
-              onChange={setOracleFeeRecipient}
-              placeholder="AAAAAAA..."
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <AdminInput
-                label="BPS fee (0–10000)"
-                value={bpsFee}
-                onChange={setBpsFee}
-                type="number"
-                min={0}
-                max={10000}
-              />
-              <AdminInput
-                label="Protocol fee BPS-of-BPS (0–100)"
-                value={protocolFee}
-                onChange={setProtocolFee}
-                type="number"
-                min={0}
-                max={100}
-              />
-            </div>
-          </AdminActionForm>
-        </>
-      )}
+        <AdminActionForm
+          title="Unpause (Qubic)"
+          onSubmit={async () => {
+            const r = await qubicAdmin.unpause();
+            onRolesChanged();
+            return r;
+          }}
+          submitLabel="Unpause"
+          disabled={!paused}
+        >
+          <p className="text-xs text-gray">
+            {!paused ? "Bridge is already active." : "Resumes bridge transactions on Qubic."}
+          </p>
+        </AdminActionForm>
+      </div>
 
-      {(isQubicAdmin || isQubicPauser) && (
-        <>
-          <AdminActionForm
-            title="Pause (Qubic)"
-            onSubmit={async () => qubicAdmin.pause()}
-            submitLabel="Pause"
-          >
-            <p className="text-xs text-gray">Pauses all bridge transactions on Qubic.</p>
-          </AdminActionForm>
+      <AdminActionForm
+        title="Transfer Admin"
+        description="Transfers Qubic contract admin rights to another address."
+        onSubmit={() => qubicAdmin.transferAdmin(newAdmin.trim())}
+        submitLabel="Transfer Admin"
+        disabled={newAdmin.trim().length !== 60}
+      >
+        <AdminInput
+          label="New admin (Qubic publicId, 60 chars)"
+          value={newAdmin}
+          onChange={setNewAdmin}
+          placeholder="AAAAAAA..."
+        />
+      </AdminActionForm>
 
-          <AdminActionForm
-            title="Unpause (Qubic)"
-            onSubmit={async () => qubicAdmin.unpause()}
-            submitLabel="Unpause"
-          >
-            <p className="text-xs text-gray">Resumes bridge transactions on Qubic.</p>
-          </AdminActionForm>
-        </>
-      )}
+      <AdminActionForm
+        title="Edit Oracle Threshold"
+        description="Minimum number of oracle signatures required to process a transfer."
+        onSubmit={() => qubicAdmin.editThreshold(Number(threshold))}
+        submitLabel="Set Threshold"
+        disabled={!threshold || Number(threshold) < 1}
+      >
+        <AdminInput
+          label="New threshold"
+          value={threshold}
+          onChange={setThreshold}
+          type="number"
+          min={1}
+          max={255}
+        />
+      </AdminActionForm>
+
+      <AdminActionForm
+        title="Edit Fee Parameters"
+        description="Update fee recipients and basis points."
+        onSubmit={() =>
+          qubicAdmin.editFeeParameters(
+            protocolFeeRecipient.trim(),
+            oracleFeeRecipient.trim(),
+            Number(bpsFee),
+            Number(protocolFee),
+          )
+        }
+        submitLabel="Update Fees"
+        disabled={
+          protocolFeeRecipient.trim().length !== 60 || oracleFeeRecipient.trim().length !== 60
+        }
+      >
+        <AdminInput
+          label="Protocol fee recipient (Qubic publicId)"
+          value={protocolFeeRecipient}
+          onChange={setProtocolFeeRecipient}
+          placeholder="AAAAAAA..."
+        />
+        <AdminInput
+          label="Oracle fee recipient (Qubic publicId)"
+          value={oracleFeeRecipient}
+          onChange={setOracleFeeRecipient}
+          placeholder="AAAAAAA..."
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <AdminInput
+            label="BPS fee (0–10000)"
+            value={bpsFee}
+            onChange={setBpsFee}
+            type="number"
+            min={0}
+            max={10000}
+          />
+          <AdminInput
+            label="Protocol fee BPS-of-BPS (0–100)"
+            value={protocolFee}
+            onChange={setProtocolFee}
+            type="number"
+            min={0}
+            max={100}
+          />
+        </div>
+      </AdminActionForm>
     </div>
   );
 }
@@ -277,22 +427,23 @@ export default function AdminPage() {
 
   const {
     solanaAdmin,
+    solanaPaused,
+    solanaOracles,
+    solanaPausers,
     isSolanaAdmin,
     isSolanaPauser,
     isQubicAdmin,
     isQubicPauser,
+    qubicOracles,
+    qubicPausers,
     qubicConfig,
     loading,
     refresh,
   } = useAdminRoles();
 
-  const hasSolanaAccess = isSolanaAdmin || isSolanaPauser;
-  const hasQubicAccess = isQubicAdmin || isQubicPauser;
-
   return (
     <div className={cn("flex w-full flex-col gap-8", "p-0 py-8 xl:p-8")}>
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-primary">Admin Panel</h1>
         <button
           onClick={refresh}
           className="text-xs text-gray hover:text-primary transition-colors"
@@ -302,7 +453,7 @@ export default function AdminPage() {
       </div>
 
       {/* Status overview */}
-      <div className="flex flex-col gap-4 rounded-xl border border-white/8 bg-white/3 px-5 py-4">
+      <div className="flex flex-col gap-4 rounded-xl border border-gray/20 bg-white/3 px-5 py-4">
         <SectionTitle>Connected wallets</SectionTitle>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -344,9 +495,7 @@ export default function AdminPage() {
         </div>
 
         {qubicConfig && (
-          <div className="mt-1 flex flex-wrap gap-4 border-t border-white/8 pt-3">
-            <Stat label="Oracles" value={String(qubicConfig.oracleCount)} />
-            <Stat label="Pausers" value={String(qubicConfig.pauserCount)} />
+          <div className="mt-1 flex flex-wrap gap-4 border-t border-gray/20 pt-3">
             <Stat label="Oracle threshold" value={String(qubicConfig.oracleThreshold)} />
             <Stat label="BPS fee" value={String(qubicConfig.bpsFee)} />
             <Stat label="Protocol fee" value={String(qubicConfig.protocolFee)} />
@@ -360,31 +509,27 @@ export default function AdminPage() {
         )}
       </div>
 
-      {/* Solana admin actions */}
-      {solanaConnected && hasSolanaAccess && (
+      {solanaConnected && (
         <div className="flex flex-col gap-4">
           <SectionTitle>Solana</SectionTitle>
-          <SolanaAdminPanel isSolanaAdmin={isSolanaAdmin} isSolanaPauser={isSolanaPauser} />
+          <SolanaAdminPanel
+            oracles={solanaOracles}
+            pausers={solanaPausers}
+            paused={solanaPaused}
+            onRolesChanged={refresh}
+          />
         </div>
       )}
 
-      {/* Qubic admin actions */}
-      {qubicConnected && hasQubicAccess && (
+      {qubicConnected && (
         <div className="flex flex-col gap-4">
           <SectionTitle>Qubic</SectionTitle>
-          <QubicAdminPanel isQubicAdmin={isQubicAdmin} isQubicPauser={isQubicPauser} />
-        </div>
-      )}
-
-      {/* No access */}
-      {!hasSolanaAccess && !hasQubicAccess && (solanaConnected || qubicConnected) && !loading && (
-        <div className="flex flex-col items-center gap-2 py-12 text-center">
-          <p className="text-sm text-gray">
-            No admin or pauser roles detected for connected wallets.
-          </p>
-          <p className="text-xs text-gray/60">
-            Connect the wallet that holds admin or pauser privileges.
-          </p>
+          <QubicAdminPanel
+            oracles={qubicOracles}
+            pausers={qubicPausers}
+            paused={qubicConfig?.paused ?? false}
+            onRolesChanged={refresh}
+          />
         </div>
       )}
 
