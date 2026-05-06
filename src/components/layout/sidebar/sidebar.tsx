@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { History, Plus, Radio, SendToBack, ShieldAlert } from "lucide-react";
+import { History, Plus, Radio, SendToBack } from "lucide-react";
 import { routes } from "@/constants/routes";
 import QubicBridgeLogomark from "@/components/core/assets/qubic-bridge-logomark";
 import StatusSection from "./components/status/status-section";
@@ -11,7 +11,6 @@ const navItems = [
   { path: routes.activity.path, name: routes.activity.name, Icon: Radio },
   { path: routes.bridge.path, name: routes.bridge.name, Icon: SendToBack },
   { path: routes.history.path, name: routes.history.name, Icon: History },
-  { path: routes.admin.path, name: routes.admin.name, Icon: ShieldAlert },
 ];
 
 export default function Sidebar() {
