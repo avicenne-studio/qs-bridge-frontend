@@ -16,17 +16,6 @@ import { useQubicWallet } from "@/providers/QubicWalletProvider";
 
 const POLL_INTERVAL_MS = 30_000;
 
-// Solana GlobalState layout (112 bytes):
-//   [0]      u8   key
-//   [1..32]  addr admin
-//   [33..64] addr protocolFeeRecipient
-//   [65..96] addr tokenMint
-//   [97..104] u64 owedProtocolFee
-//   [105..106] u16 bpsFee
-//   [107..108] u16 protocolFeeBpsOfBps
-//   [109]    bool paused
-//   [110]    u8   oracleCount
-//   [111]    u8   bump
 export function decodeSolanaAdmin(data: Uint8Array): string | null {
   try {
     if (data.length < 33) return null;
@@ -68,9 +57,6 @@ function decodeSolanaGlobalState(data: Uint8Array): SolanaGlobalState | null {
   }
 }
 
-// Oracle account: key(1, value=1) + oraclePubkey(32) + claimableBalance(8) + bump(1) = 42 bytes
-// Pauser account: key(1, value=2) + pauserPubkey(32) + bump(1) = 34 bytes
-// memcmp bytes are base58-encoded: key 1 → "2", key 2 → "3"
 export interface SolanaOracle {
   pubkey: string;
   claimableBalance: bigint;

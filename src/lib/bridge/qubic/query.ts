@@ -27,17 +27,6 @@ export async function queryQubicFunction(
   return Uint8Array.from(atob(body.responseData), (c) => c.charCodeAt(0));
 }
 
-// GetConfig_output layout (118 bytes, all little-endian):
-//   [0..31]   id admin
-//   [32..63]  id protocolFeeRecipient
-//   [64..95]  id oracleFeeRecipient
-//   [96..99]  uint32 bpsFee
-//   [100..103] uint32 protocolFee
-//   [104..107] uint32 oracleCount
-//   [108..111] uint32 pauserCount
-//   [112]     uint8 oracleThreshold
-//   [113]     bit paused (1 byte)
-//   [114..117] uint32 orderEra
 export interface QubicConfig {
   adminBytes: Uint8Array;
   protocolFeeRecipientBytes: Uint8Array;
@@ -69,19 +58,16 @@ export async function queryGetConfig(): Promise<QubicConfig> {
   };
 }
 
-// IsOracle_input: id account (32B) → IsOracle_output: bit isOracle (1B)
 export async function queryIsOracle(accountBytes: Uint8Array): Promise<boolean> {
   const data = await queryQubicFunction(2, accountBytes.slice(0, 32));
   return data[0] !== 0;
 }
 
-// IsPauser_input: id account (32B) → IsPauser_output: bit isPauser (1B)
 export async function queryIsPauser(accountBytes: Uint8Array): Promise<boolean> {
   const data = await queryQubicFunction(3, accountBytes.slice(0, 32));
   return data[0] !== 0;
 }
 
-// GetOracles (fn 7): output = uint32 count + id[64] accounts
 export async function queryGetOracles(): Promise<string[]> {
   const data = await queryQubicFunction(7);
   const count = new DataView(data.buffer, data.byteOffset).getUint32(0, true);
@@ -92,7 +78,6 @@ export async function queryGetOracles(): Promise<string[]> {
   return result;
 }
 
-// GetPausers (fn 8): output = uint32 count + id[32] accounts
 export async function queryGetPausers(): Promise<string[]> {
   const data = await queryQubicFunction(8);
   const count = new DataView(data.buffer, data.byteOffset).getUint32(0, true);

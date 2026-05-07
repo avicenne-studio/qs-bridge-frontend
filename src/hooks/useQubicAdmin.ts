@@ -49,7 +49,6 @@ export function useQubicAdmin(): QubicAdminActions {
         if (!session.seed) throw new Error("Seed not available for this connection method");
         return await buildAndBroadcastAdminTx(session.seed, inputType, payload);
       }
-      // WalletConnect path
       const txId = await sendQubicTransaction({
         amount: 0,
         contractIndex: QSB_CONTRACT_INDEX,

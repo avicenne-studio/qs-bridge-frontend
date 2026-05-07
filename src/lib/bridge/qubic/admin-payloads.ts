@@ -1,8 +1,6 @@
-// Role constants — match the Role enum in QubicSolanaBridge.h
 export const QUBIC_ROLE_ORACLE = 1;
 export const QUBIC_ROLE_PAUSER = 2;
 
-// Procedure input types — match REGISTER_USER_PROCEDURE indices
 export const PROC_TRANSFER_ADMIN = 10;
 export const PROC_EDIT_ORACLE_THRESHOLD = 11;
 export const PROC_ADD_ROLE = 12;
@@ -11,7 +9,6 @@ export const PROC_PAUSE = 14;
 export const PROC_UNPAUSE = 15;
 export const PROC_EDIT_FEE_PARAMETERS = 16;
 
-// AddRole_input: id account (32B) + uint8 role (1B) = 33 bytes
 export function buildAddRolePayload(accountBytes: Uint8Array, role: number): Uint8Array {
   const buf = new Uint8Array(33);
   buf.set(accountBytes.slice(0, 32), 0);
@@ -19,7 +16,6 @@ export function buildAddRolePayload(accountBytes: Uint8Array, role: number): Uin
   return buf;
 }
 
-// RemoveRole_input: id account (32B) + uint8 role (1B) = 33 bytes
 export function buildRemoveRolePayload(accountBytes: Uint8Array, role: number): Uint8Array {
   const buf = new Uint8Array(33);
   buf.set(accountBytes.slice(0, 32), 0);
@@ -27,21 +23,16 @@ export function buildRemoveRolePayload(accountBytes: Uint8Array, role: number): 
   return buf;
 }
 
-// TransferAdmin_input: id newAdmin (32B)
 export function buildTransferAdminPayload(newAdminBytes: Uint8Array): Uint8Array {
   const buf = new Uint8Array(32);
   buf.set(newAdminBytes.slice(0, 32), 0);
   return buf;
 }
 
-// EditOracleThreshold_input: uint8 newThreshold (1B)
 export function buildEditThresholdPayload(threshold: number): Uint8Array {
   return new Uint8Array([threshold & 0xff]);
 }
 
-// EditFeeParameters_input:
-//   id protocolFeeRecipient (32B) + id oracleFeeRecipient (32B)
-//   + uint32 bpsFee (4B LE) + uint32 protocolFee (4B LE) = 72 bytes
 export function buildEditFeeParametersPayload(
   protocolFeeRecipientBytes: Uint8Array,
   oracleFeeRecipientBytes: Uint8Array,
@@ -60,7 +51,6 @@ export function buildEditFeeParametersPayload(
   return bytes;
 }
 
-// Converts 32 raw bytes to a 60-char Qubic publicId string (base-26 LE, uppercase).
 export function bytesToPublicId(bytes: Uint8Array): string {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let result = "";
@@ -74,8 +64,6 @@ export function bytesToPublicId(bytes: Uint8Array): string {
   return result;
 }
 
-// Converts a Qubic publicId string (60 chars, upper or lower case) to 32-byte public key.
-// Implements the same base-26 decoding as QubicHelper.getIdentityBytes.
 export function publicIdToBytes(publicId: string): Uint8Array {
   const upper = publicId.toUpperCase();
   const bytes = new Uint8Array(32);
