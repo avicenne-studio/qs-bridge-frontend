@@ -1,6 +1,6 @@
 # QSB Frontend
 
-React frontend for the **Qubic–Solana Bridge** — a cross-chain bridge that lets users transfer wQUBIC tokens between the Qubic and Solana networks.
+React frontend for the **Qubic–Solana Bridge**, a cross-chain bridge that lets users transfer wQUBIC tokens between the Qubic and Solana chains.
 
 ## Prerequisites
 
@@ -59,27 +59,6 @@ npm run preview    # serves the built dist/ locally
 **Solana** — connect via [Reown AppKit](https://reown.com) (supports Phantom, Backpack, and all WalletConnect-compatible wallets).
 
 **Qubic** — connect via MetaMask Snap (`@ardata-tech/qubic-wallet`) or WalletConnect.
-
-## Admin dashboard
-
-The `/admin` page is the operator control panel for the bridge. It is visible only when a wallet is connected and automatically detects the connected wallet's role (admin, pauser, oracle, or fee recipient).
-
-**Solana contract**
-
-- View oracles and their claimable wQUBIC fee balances
-- Claim oracle fees (per oracle) and protocol fees
-- Add / remove oracles and pausers
-- Pause / unpause bridge transactions
-
-**Qubic contract**
-
-- View oracles, pausers, and current fee configuration
-- Add / remove roles (oracle or pauser)
-- Edit oracle threshold, BPS fee, and protocol/oracle fee recipients
-- Transfer admin rights
-- Pause / unpause bridge transactions
-
-All actions submit on-chain transactions directly from the connected wallet — no backend involvement for signing.
 
 ## Tooling
 
