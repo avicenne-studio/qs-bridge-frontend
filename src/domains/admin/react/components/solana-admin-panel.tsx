@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import { useSolanaAdmin } from "@/hooks/useSolanaAdmin";
 import useSolanaWallet from "@/hooks/useSolanaWallet";
 import { formatWQubic } from "../utils";
@@ -48,6 +49,26 @@ export default function SolanaAdminPanel({
   }, [paused]);
 
   const effectivePaused = optimisticPaused ?? paused;
+
+  const hasAnyRole =
+    isSolanaAdmin ||
+    isSolanaProtocolFeeRecipient ||
+    (solanaAddress !== null &&
+      (pausers.includes(solanaAddress) || oracles.some((o) => o.pubkey === solanaAddress)));
+
+  if (!hasAnyRole) {
+    return (
+      <div className="flex flex-col gap-5">
+        <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-400">
+          <AlertTriangle size={13} className="shrink-0" />
+          <span>
+            Connected wallet has no role on this contract (not admin, pauser, oracle, or fee
+            recipient).
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">

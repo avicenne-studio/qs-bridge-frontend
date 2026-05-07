@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import { useQubicAdmin } from "@/hooks/useQubicAdmin";
+import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import {
   QUBIC_ROLE_ORACLE,
   QUBIC_ROLE_PAUSER,
@@ -32,6 +34,7 @@ export default function QubicAdminPanel({
   onRolesChanged,
 }: Props) {
   const qubicAdmin = useQubicAdmin();
+  const { address: qubicAddress } = useQubicWallet();
 
   const [addRoleAddr, setAddRoleAddr] = useState("");
   const [addRoleType, setAddRoleType] = useState<number>(QUBIC_ROLE_ORACLE);
@@ -39,7 +42,6 @@ export default function QubicAdminPanel({
   const [removeRoleType, setRemoveRoleType] = useState<number>(QUBIC_ROLE_ORACLE);
   const [optimisticPaused, setOptimisticPaused] = useState<boolean | null>(null);
 
-  // Optimistic role lists so changes appear immediately without waiting for the next poll
   const [optimisticOracleAdds, setOptimisticOracleAdds] = useState<string[]>([]);
   const [optimisticPauserAdds, setOptimisticPauserAdds] = useState<string[]>([]);
   const [optimisticOracleRemovals, setOptimisticOracleRemovals] = useState<Set<string>>(new Set());
@@ -76,6 +78,11 @@ export default function QubicAdminPanel({
 
   const effectivePaused = optimisticPaused ?? paused;
 
+  const hasAnyRole =
+    isQubicAdmin ||
+    isQubicPauser ||
+    (qubicAddress !== null && oracles.includes(String(qubicAddress)));
+
   function handleAddSuccess() {
     const addr = addRoleAddr.trim();
     if (addRoleType === QUBIC_ROLE_ORACLE) {
@@ -98,6 +105,12 @@ export default function QubicAdminPanel({
 
   return (
     <div className="flex flex-col gap-5">
+      {!hasAnyRole && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-400">
+          <AlertTriangle size={13} className="shrink-0" />
+          <span>Connected wallet has no role on this contract (not admin, pauser, or oracle).</span>
+        </div>
+      )}
       {config && (
         <div className="flex flex-wrap gap-4 rounded-lg border border-gray/20 px-4 py-3">
           <Stat label="BPS fee" value={`${config.bpsFee} bps`} />
