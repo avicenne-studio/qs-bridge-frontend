@@ -12,14 +12,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/qubic-node": {
-        target: "http://34.163.36.179:41841",
+        target: "http://localhost:41841",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/qubic-node/, ""),
-      },
-      "/qubic-indexer": {
-        target: "http://34.163.36.179:3002",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/qubic-indexer/, ""),
       },
     },
   },

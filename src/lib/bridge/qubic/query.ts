@@ -1,4 +1,4 @@
-import { QSB_CONTRACT_INDEX, QUBIC_NODE_RPC_URL } from "./constants";
+import { QSB_CONTRACT_INDEX, QUBIC_INDEXER_URL } from "./constants";
 import { bytesToPublicId } from "./admin-payloads";
 
 function bytesToHex(bytes: Uint8Array): string {
@@ -7,24 +7,42 @@ function bytesToHex(bytes: Uint8Array): string {
     .join("");
 }
 
+function hexToBytes(hex: string): Uint8Array {
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+
+// Calls Bob's /querySmartContract — same format as oracle/scripts/qubic/utils.js queryContractFunction.
+// Retries on "pending" responses (Bob may need a tick to process).
 export async function queryQubicFunction(
   functionId: number,
   inputBytes: Uint8Array = new Uint8Array(0),
+  maxRetries = 20,
 ): Promise<Uint8Array> {
-  const res = await fetch(`${QUBIC_NODE_RPC_URL}/live/v1/querySmartContract`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contractIndex: QSB_CONTRACT_INDEX,
-      inputType: functionId,
-      inputHex: bytesToHex(inputBytes),
-    }),
-  });
+  const nonce = (Math.random() * 0xffffffff) >>> 0;
+  const data = bytesToHex(inputBytes);
 
-  if (!res.ok) throw new Error(`querySmartContract HTTP ${res.status}`);
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 300));
 
-  const body = (await res.json()) as { responseData: string };
-  return Uint8Array.from(atob(body.responseData), (c) => c.charCodeAt(0));
+    const res = await fetch(`${QUBIC_INDEXER_URL}/querySmartContract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nonce, scIndex: QSB_CONTRACT_INDEX, funcNumber: functionId, data }),
+    });
+
+    if (!res.ok) throw new Error(`querySmartContract HTTP ${res.status}`);
+
+    const body = (await res.json()) as { data?: string; error?: string };
+    if (body.error === "pending") continue;
+    if (typeof body.data !== "string") throw new Error(`querySmartContract: unexpected response`);
+    return hexToBytes(body.data);
+  }
+
+  throw new Error(
+    `querySmartContract func=${functionId}: still pending after ${maxRetries} retries`,
+  );
 }
 
 export interface QubicConfig {
@@ -54,7 +72,7 @@ export async function queryGetConfig(): Promise<QubicConfig> {
     pauserCount: view.getUint32(108, true),
     oracleThreshold: data[112],
     paused: data[113] !== 0,
-    orderEra: view.getUint32(114, true),
+    orderEra: view.getUint32(116, true),
   };
 }
 
@@ -73,7 +91,7 @@ export async function queryGetOracles(): Promise<string[]> {
   const count = new DataView(data.buffer, data.byteOffset).getUint32(0, true);
   const result: string[] = [];
   for (let i = 0; i < count && i < 64; i++) {
-    result.push(bytesToPublicId(data.slice(4 + i * 32, 4 + (i + 1) * 32)));
+    result.push(bytesToPublicId(data.slice(8 + i * 32, 8 + (i + 1) * 32)));
   }
   return result;
 }
@@ -83,7 +101,7 @@ export async function queryGetPausers(): Promise<string[]> {
   const count = new DataView(data.buffer, data.byteOffset).getUint32(0, true);
   const result: string[] = [];
   for (let i = 0; i < count && i < 32; i++) {
-    result.push(bytesToPublicId(data.slice(4 + i * 32, 4 + (i + 1) * 32)));
+    result.push(bytesToPublicId(data.slice(8 + i * 32, 8 + (i + 1) * 32)));
   }
   return result;
 }
