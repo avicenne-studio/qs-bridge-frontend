@@ -1,7 +1,13 @@
 export const HUB_NETWORK = { Qubic: 1, Solana: 2 } as const;
 export type HubNetworkId = (typeof HUB_NETWORK)[keyof typeof HUB_NETWORK];
 
-export type HubOrderStatus = "pending" | "ready-for-relay" | "relayed" | "failed" | "finalized";
+export type HubOrderStatus =
+  | "pending"
+  | "ready-for-relay"
+  | "transaction-broadcasted"
+  | "relayed"
+  | "failed"
+  | "finalized";
 
 export type HubChain = "qubic" | "solana";
 

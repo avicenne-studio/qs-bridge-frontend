@@ -9,6 +9,7 @@ import { getQubicClient } from "@/lib/qubicClient";
 const HUB_TO_FRONTEND_STATUS: Record<HubOrderStatus, OrderStatus> = {
   pending: "pending",
   "ready-for-relay": "ready-for-relay",
+  "transaction-broadcasted": "in-progress",
   relayed: "in-progress",
   failed: "failed",
   finalized: "finalized",
@@ -70,12 +71,12 @@ export async function mapHubOrderToRow(order: HubOrder): Promise<ActivityRow> {
   };
 }
 
-const STATUS_LABEL_TO_HUB: Record<string, HubOrderStatus> = {
-  Pending: "pending",
-  "In Progress": "relayed",
-  "Ready for relay": "ready-for-relay",
-  Finalized: "finalized",
-  Failed: "failed",
+const STATUS_LABEL_TO_HUB: Record<string, HubOrderStatus[]> = {
+  Pending: ["pending"],
+  "In Progress": ["transaction-broadcasted", "relayed"],
+  "Ready for relay": ["ready-for-relay"],
+  Finalized: ["finalized"],
+  Failed: ["failed"],
 };
 
 export function filtersToHubQuery(
@@ -90,7 +91,7 @@ export function filtersToHubQuery(
     switch (filter.category) {
       case "status": {
         const mapped = STATUS_LABEL_TO_HUB[filter.value];
-        if (mapped) statuses.push(mapped);
+        if (mapped) statuses.push(...mapped);
         break;
       }
       case "direction": {
@@ -122,7 +123,7 @@ export function filtersToHubQuery(
   }
 
   if (statuses.length > 0) {
-    query.status = statuses;
+    query.status = [...new Set(statuses)];
   }
 
   if (searchQuery.trim()) {
