@@ -2,7 +2,7 @@
 
 ## Overview
 
-React 19 + TypeScript + Vite application that provides the user interface for the Qubic ↔ Solana bridge. Users can initiate transfers, track order status, view transaction history, and (via the Admin page) inspect on-chain admin roles and contract state. The Hub's public REST API is the sole backend dependency.
+React 19 + TypeScript + Vite application that provides the user interface for the Qubic ↔ Solana bridge. Users can initiate transfers, track order status, view transaction history, and (via the Admin page) inspect on-chain admin roles and contract state. The Hub's public REST API is the main backend dependency, with direct Bob smart-contract reads also used for some Qubic metadata.
 
 ## Tech Stack
 
@@ -54,7 +54,7 @@ src/
   stores/
     modal-store.ts               # Zustand store: openModal(type, data) / closeModal()
   hooks/
-    useBridge.ts                 # Top-level bridge form state + submission logic
+    useBridge.ts                 # Top-level bridge form state + submission logic; Solana → Qubic fetches current Qubic orderEra before submit
     useBridgeInbound.ts          # Solana → Qubic bridge flow
     useBridgeOutbound.ts         # Qubic → Solana bridge flow
     useBridgeHealth.ts           # Polls /api/health/bridge + /api/health/oracles
@@ -123,6 +123,39 @@ The frontend consumes the Hub's public REST API. Base URL is set via environment
 | `use-activity-orders` | `GET /api/orders`                | Global activity feed (no filter).                |
 
 The Hub exposes a full OpenAPI spec at `/docs` (Swagger UI).
+
+## Status Model
+
+Hub statuses currently handled by the frontend:
+
+- `pending`
+- `ready-for-relay`
+- `transaction-broadcasted`
+- `relayed`
+- `failed`
+- `finalized`
+
+Frontend display mapping:
+
+- `transaction-broadcasted` → `in-progress`
+- `relayed` → `in-progress`
+
+The history filter label `In Progress` maps to both Hub statuses `transaction-broadcasted` and `relayed`.
+
+Relevant files:
+
+- `src/lib/hub/hub.types.ts`
+- `src/lib/hub/hub-mappers.ts`
+- `src/hooks/useOrderTracking.ts`
+
+## Direct Qubic Reads
+
+For some Qubic data the frontend talks directly to Bob:
+
+- `src/lib/bridge/qubic/query.ts` uses Bob `/querySmartContract`
+- `useBridge.ts` reads Qubic config to obtain the current `orderEra` before Solana → Qubic submission
+
+In local/dev setups, Vite proxies `/qubic-node` to Bob to avoid browser CORS issues.
 
 ## Scripts
 
