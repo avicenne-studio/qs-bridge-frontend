@@ -11,4 +11,8 @@ export const routes = {
     path: "/activity",
     name: "Activity",
   },
+  admin: {
+    path: "/admin",
+    name: "Admin",
+  },
 } as const;

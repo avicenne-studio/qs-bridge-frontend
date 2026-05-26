@@ -11,6 +11,7 @@ import { qubicIdentityToBytes } from "@/lib/bridge/qubicAddress";
 import { displayToRaw } from "@/lib/bridge/amounts";
 import { useFeeEstimate } from "@/hooks/useFeeEstimate";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
+import { queryGetConfig } from "@/lib/bridge/qubic/query";
 
 export type BridgeSteps = "initial" | "successful";
 
@@ -82,11 +83,12 @@ export function useBridge() {
 
     if (isSolanaToQubic) {
       const toAddress = qubicIdentityToBytes(qubicWallet.address as string);
+      const { orderEra } = await queryGetConfig();
       result = await bridge.sendOutbound({
         amount: displayToRaw(bridgeAmount),
         toAddress,
         relayerFee: displayToRaw(effectiveRelayFee),
-        orderEra: 0,
+        orderEra,
       });
     } else {
       result = await inbound.sendLock({

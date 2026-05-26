@@ -29,14 +29,16 @@ export default function MainLayout() {
 
         <main
           className={cn(
-            "size-full bg-white overflow-hidden",
+            "flex flex-col size-full bg-white overflow-hidden",
             "pb-20 xl:pb-0",
             "rounded-tl-2xl xl:rounded-tl-4xl",
             "mt-8",
             "pl-4 xl:pl-7",
           )}
         >
-          <div className={cn("flex w-full bg-primary rounded-tl-4xl", "h-[50px] xl:h-[90px]")}>
+          <div
+            className={cn("flex shrink-0 w-full bg-primary rounded-tl-4xl", "h-[50px] xl:h-[90px]")}
+          >
             <span
               className={cn(
                 "text-primary bg-white font-semibold flex items-center pr-7 uppercase",
@@ -50,7 +52,7 @@ export default function MainLayout() {
             <WalletArea />
           </div>
 
-          <div className={cn("size-full overflow-auto bg-white", "pr-4 xl:pr-7")}>
+          <div className={cn("flex-1 min-h-0 overflow-auto bg-white", "pr-4 xl:pr-7")}>
             <Outlet />
           </div>
         </main>

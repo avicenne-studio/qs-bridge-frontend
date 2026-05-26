@@ -1,21 +1,74 @@
-# React + TypeScript + Vite
+# QSB Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR, and uses [oxlint](https://oxc.rs/docs/guide/usage/linter.html) and [oxfmt](https://oxc.rs/docs/guide/usage/formatter) for linting and formatting.
+React frontend for the **Qubic–Solana Bridge**, a cross-chain bridge that lets users transfer wQUBIC tokens between the Qubic and Solana chains.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 20+
+- npm 10+
 
-## React Compiler
+## Setup
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+Copy the environment file and fill in the values:
 
-Note: This will impact Vite dev & build performances.
+```bash
+cp .env .env.local
+```
 
-## Lint and formatting
+| Variable                        | Description                                    |
+| ------------------------------- | ---------------------------------------------- |
+| `VITE_SOLANA_RPC_URL`           | Solana RPC endpoint (devnet or mainnet)        |
+| `VITE_SOLANA_NETWORK`           | `devnet` or `mainnet-beta`                     |
+| `VITE_WQUBIC_MINT_ADDRESS`      | wQUBIC SPL token mint address                  |
+| `VITE_QUBIC_NETWORK`            | `mainnet` or `testnet`                         |
+| `VITE_QUBIC_RPC_URL`            | Qubic public RPC URL                           |
+| `VITE_QUBIC_NODE_RPC_URL`       | Qubic node RPC (proxied, e.g. `/qubic-node`)   |
+| `VITE_QUBIC_INDEXER_URL`        | Qubic indexer (proxied, e.g. `/qubic-indexer`) |
+| `VITE_QUBIC_CONTRACT_INDEX`     | Bridge contract index on Qubic                 |
+| `VITE_QUBIC_SNAP_ID`            | MetaMask Snap ID for Qubic wallet              |
+| `VITE_QUBIC_SNAP_VERSION`       | MetaMask Snap version                          |
+| `VITE_WALLETCONNECT_PROJECT_ID` | WalletConnect project ID                       |
+| `VITE_REOWN_PROJECT_ID`         | Reown AppKit project ID                        |
+| `VITE_HUB_API_URL`              | Hub aggregator API base URL                    |
 
-- **Lint**: `npm run lint` (oxlint)
-- **Formatting**: `npm run format` to format, `npm run format:check` to check without modifying
+## Running locally
 
-Configuration is in `.oxlintrc.json` and `.oxfmtrc.json`. The pre-commit hook (Husky) runs lint and format check before each commit.
+```bash
+npm install
+npm run dev        # starts Vite dev server on http://localhost:5173
+```
+
+## Building for production
+
+```bash
+npm run build      # type-checks then builds to dist/
+npm run preview    # serves the built dist/ locally
+```
+
+## Pages
+
+| Route       | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `/bridge`   | Initiate a cross-chain transfer                                      |
+| `/history`  | Personal transfer history                                            |
+| `/activity` | Live bridge activity feed                                            |
+| `/admin`    | Operator dashboard — manage oracles, pausers, fees, and bridge state |
+
+## Wallets
+
+**Solana** — connect via [Reown AppKit](https://reown.com) (supports Phantom, Backpack, and all WalletConnect-compatible wallets).
+
+**Qubic** — connect via MetaMask Snap (`@ardata-tech/qubic-wallet`) or WalletConnect.
+
+## Tooling
+
+```bash
+npm run lint            # oxlint
+npm run format          # oxfmt (auto-fix)
+npm run format:check    # oxfmt (check only)
+npm run typecheck       # tsc --noEmit
+npm test                # vitest
+npm run storybook       # component explorer on http://localhost:6006
+```
+
+A pre-commit hook (Husky) runs typecheck, lint, and format check automatically before each commit.

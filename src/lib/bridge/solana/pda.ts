@@ -16,3 +16,19 @@ export function deriveOutboundOrderPda(networkOut: number, nonce: Uint8Array): P
   );
   return pda;
 }
+
+export function deriveOraclePda(oracle: PublicKey): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("oracle"), oracle.toBytes()],
+    PROGRAM_ID,
+  );
+  return pda;
+}
+
+export function derivePauserPda(pauser: PublicKey): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("pauser"), pauser.toBytes()],
+    PROGRAM_ID,
+  );
+  return pda;
+}
