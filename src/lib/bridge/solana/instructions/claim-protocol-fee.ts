@@ -7,7 +7,7 @@ import {
 } from "../constants";
 import { GLOBAL_STATE_PDA } from "../pda";
 
-const CLAIM_PROTOCOL_FEE_DISCRIMINATOR = 0x0a;
+const CLAIM_PROTOCOL_FEE_DISCRIMINATOR = 0x0c;
 
 function deriveAta(owner: PublicKey, mint: PublicKey): PublicKey {
   return PublicKey.findProgramAddressSync(
