@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import WalletProviders from "@/providers/WalletProviders";
 import ModalProvider from "@/providers/modal-provider";
+import { Toaster } from "sonner";
 import "@/styles/index.css";
 import App from "@/App";
 
@@ -13,6 +14,7 @@ createRoot(document.getElementById("root")!).render(
       <WalletProviders>
         <App />
         <ModalProvider />
+        <Toaster position="bottom-right" richColors />
       </WalletProviders>
     </BrowserRouter>
   </StrictMode>,

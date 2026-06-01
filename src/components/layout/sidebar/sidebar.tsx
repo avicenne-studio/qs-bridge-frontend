@@ -31,7 +31,7 @@ export default function Sidebar() {
         </nav>
         <Button
           variant="default"
-          label="Start new bridge"
+          label="Bridge"
           icon={<Plus size={16} />}
           path={routes.bridge.path}
           isInternalLink
