@@ -6,15 +6,10 @@ import { GLOBAL_STATE_PDA, derivePauserPda } from "../pda";
 const PAUSE_DISCRIMINATOR = 0x05;
 const UNPAUSE_DISCRIMINATOR = 0x06;
 
-function createPauseUnpauseInstruction(
-  discriminator: number,
-  pauser: PublicKey,
-): TransactionInstruction {
+export function createPauseInstruction(pauser: PublicKey): TransactionInstruction {
   const pauserPda = derivePauserPda(pauser);
-
   const data = Buffer.alloc(1);
-  data.writeUInt8(discriminator, 0);
-
+  data.writeUInt8(PAUSE_DISCRIMINATOR, 0);
   return new TransactionInstruction({
     programId: PROGRAM_ID,
     keys: [
@@ -26,10 +21,16 @@ function createPauseUnpauseInstruction(
   });
 }
 
-export function createPauseInstruction(pauser: PublicKey): TransactionInstruction {
-  return createPauseUnpauseInstruction(PAUSE_DISCRIMINATOR, pauser);
-}
-
-export function createUnpauseInstruction(pauser: PublicKey): TransactionInstruction {
-  return createPauseUnpauseInstruction(UNPAUSE_DISCRIMINATOR, pauser);
+// Unpause is admin-only — no PauserPDA account.
+export function createUnpauseInstruction(admin: PublicKey): TransactionInstruction {
+  const data = Buffer.alloc(1);
+  data.writeUInt8(UNPAUSE_DISCRIMINATOR, 0);
+  return new TransactionInstruction({
+    programId: PROGRAM_ID,
+    keys: [
+      { pubkey: admin, isSigner: true, isWritable: true },
+      { pubkey: GLOBAL_STATE_PDA, isSigner: false, isWritable: true },
+    ],
+    data,
+  });
 }

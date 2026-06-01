@@ -108,9 +108,9 @@ export function useSolanaAdmin(): SolanaAdminActions {
   const unpause = useCallback(
     () =>
       run(async () => {
-        const pauser = new PublicKey(address!);
-        const ix = createUnpauseInstruction(pauser);
-        return sendTransaction(provider!, solanaConnection, ix, pauser);
+        const admin = new PublicKey(address!);
+        const ix = createUnpauseInstruction(admin);
+        return sendTransaction(provider!, solanaConnection, ix, admin);
       }),
     [provider, address],
   );

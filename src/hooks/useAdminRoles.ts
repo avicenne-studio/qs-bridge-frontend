@@ -26,7 +26,7 @@ export function decodeSolanaAdmin(data: Uint8Array): string | null {
 }
 
 export function decodeSolanaPaused(data: Uint8Array): boolean {
-  return data.length >= 110 && data[109] !== 0;
+  return data.length >= 143 && data[142] !== 0;
 }
 
 interface SolanaGlobalState {
@@ -41,16 +41,18 @@ interface SolanaGlobalState {
 
 function decodeSolanaGlobalState(data: Uint8Array): SolanaGlobalState | null {
   try {
-    if (data.length < 112) return null;
+    if (data.length < 145) return null;
     const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    // Layout: key(1) admin(32) pendingAdmin(33) protocolFeeRecipient(32) tokenMint(32)
+    //         owedProtocolFee(8) bpsFee(2) protocolFeeBpsOfBps(2) paused(1) oracleCount(1) bump(1)
     return {
       admin: new PublicKey(data.slice(1, 33)).toBase58(),
-      protocolFeeRecipient: new PublicKey(data.slice(33, 65)).toBase58(),
-      tokenMint: new PublicKey(data.slice(65, 97)).toBase58(),
-      owedProtocolFee: view.getBigUint64(97, true),
-      bpsFee: view.getUint16(105, true),
-      protocolFeeBpsOfBps: view.getUint16(107, true),
-      paused: data[109] !== 0,
+      protocolFeeRecipient: new PublicKey(data.slice(66, 98)).toBase58(),
+      tokenMint: new PublicKey(data.slice(98, 130)).toBase58(),
+      owedProtocolFee: view.getBigUint64(130, true),
+      bpsFee: view.getUint16(138, true),
+      protocolFeeBpsOfBps: view.getUint16(140, true),
+      paused: data[142] !== 0,
     };
   } catch {
     return null;

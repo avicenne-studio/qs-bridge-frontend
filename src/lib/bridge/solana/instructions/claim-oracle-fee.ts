@@ -7,7 +7,7 @@ import {
 } from "../constants";
 import { GLOBAL_STATE_PDA, deriveOraclePda } from "../pda";
 
-const CLAIM_ORACLE_FEE_DISCRIMINATOR = 0x0b;
+const CLAIM_ORACLE_FEE_DISCRIMINATOR = 0x0d;
 
 function deriveAta(owner: PublicKey, mint: PublicKey): PublicKey {
   return PublicKey.findProgramAddressSync(
