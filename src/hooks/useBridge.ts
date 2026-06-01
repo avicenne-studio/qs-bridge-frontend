@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import type { NetworkTagNetwork } from "@/components/network-tag/network-tag";
 import type { NetworkDirectionInformationProps } from "@/components/network-direction-information/network-direction-information";
 import type { Address } from "viem";
@@ -57,13 +58,15 @@ export function useBridge() {
   const handleBridge = async () => {
     setLocalError(null);
 
-    if (!solanaWallet.address) {
-      setLocalError("Connect your Solana wallet first");
+    const originConnected = isSolanaToQubic ? !!solanaWallet.address : !!qubicWallet.address;
+    if (!originConnected) {
+      toast.error(`Please connect your ${isSolanaToQubic ? "Solana" : "Qubic"} wallet`);
       return;
     }
 
-    if (!qubicWallet.address) {
-      setLocalError("Connect your Qubic wallet first");
+    const destinationConnected = isSolanaToQubic ? !!qubicWallet.address : !!solanaWallet.address;
+    if (!destinationConnected) {
+      toast.error(`Please connect your ${isSolanaToQubic ? "Qubic" : "Solana"} wallet`);
       return;
     }
 
