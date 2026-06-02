@@ -81,9 +81,7 @@ export type HubOracleHealth = {
   url: string;
   status: "ok" | "down";
   timestamp: string;
-  /** Minimum relayer fee (QU) for Qubic→Solana orders. */
   relayerFeeToSolana: string;
-  /** Minimum relayer fee (QU) for Solana→Qubic orders. */
   relayerFeeToQubic: string;
 };
 
