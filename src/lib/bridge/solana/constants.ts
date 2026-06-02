@@ -12,5 +12,3 @@ export const QUBIC_NETWORK_ID = 1;
 
 export const QUBIC_TOKEN_OUT = new Uint8Array(32);
 export const WQUBIC_DECIMALS = 9;
-export const BPS_FEE = 100;
-export const PROTOCOL_FEE_BPS_OF_BPS = 1000;
