@@ -12,7 +12,7 @@ interface Props {
   feesAmount?: string;
   relayFeesDisplay: string;
   setAmount: (amount: string) => void;
-  onRelayFeeDisplayChange?: (display: string) => void;
+  isLoadingFees?: boolean;
 }
 
 export default function BridgeAmountSection({
@@ -23,7 +23,7 @@ export default function BridgeAmountSection({
   feesAmount = "0",
   relayFeesDisplay,
   setAmount,
-  onRelayFeeDisplayChange,
+  isLoadingFees = false,
 }: Props) {
   function setMax() {
     setAmount(balance);
@@ -66,8 +66,7 @@ export default function BridgeAmountSection({
           feesAmount={feesAmount}
           relayFeesAmount={relayFeesDisplay}
           currency={destinationCurrency}
-          canEdit={!!onRelayFeeDisplayChange}
-          onRelayFeeChange={onRelayFeeDisplayChange}
+          isLoading={isLoadingFees}
         />
       </div>
     </div>

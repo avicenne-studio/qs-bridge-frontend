@@ -16,12 +16,9 @@ import { queryGetConfig } from "@/lib/bridge/qubic/query";
 
 export type BridgeSteps = "initial" | "successful";
 
-const DEFAULT_RELAYER_FEE_DISPLAY = "1000";
-
 export function useBridge() {
   const [currentBridgeStep, setCurrentBridgeStep] = useState<BridgeSteps>("initial");
   const [bridgeAmount, setBridgeAmount] = useState("");
-  const [relayFeeDisplay, setRelayFeeDisplay] = useState(DEFAULT_RELAYER_FEE_DISPLAY);
   const [originNetwork, setOriginNetwork] = useState<NetworkTagNetwork>(NETWORK.Solana);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -58,6 +55,11 @@ export function useBridge() {
   const handleBridge = async () => {
     setLocalError(null);
 
+    if (!estimate) {
+      setLocalError("Fee estimation unavailable. Please try again.");
+      return;
+    }
+
     const originConnected = isSolanaToQubic ? !!solanaWallet.address : !!qubicWallet.address;
     if (!originConnected) {
       toast.error(`Please connect your ${isSolanaToQubic ? "Solana" : "Qubic"} wallet`);
@@ -76,7 +78,8 @@ export function useBridge() {
       return;
     }
 
-    const totalFees = parseFloat(totalProgramFees) + parseFloat(effectiveRelayFee);
+    const relayerFee = estimate.relayerFee;
+    const totalFees = parseFloat(totalProgramFees) + parseFloat(relayerFee);
     if (amountValue <= totalFees) {
       setLocalError(`Amount must be greater than total fees (${Math.ceil(totalFees)} QUBIC)`);
       return;
@@ -90,14 +93,14 @@ export function useBridge() {
       result = await bridge.sendOutbound({
         amount: displayToRaw(bridgeAmount),
         toAddress,
-        relayerFee: displayToRaw(effectiveRelayFee),
+        relayerFee: displayToRaw(relayerFee),
         orderEra,
       });
     } else {
       result = await inbound.sendLock({
         amount: BigInt(Math.floor(parseFloat(bridgeAmount))),
         toSolanaAddress: solanaWallet.address as string,
-        relayerFee: BigInt(Math.floor(parseFloat(effectiveRelayFee))),
+        relayerFee: BigInt(Math.floor(parseFloat(relayerFee))),
       });
     }
 
@@ -131,7 +134,6 @@ export function useBridge() {
     bridge.reset();
     inbound.reset();
     setBridgeAmount("");
-    setRelayFeeDisplay(DEFAULT_RELAYER_FEE_DISPLAY);
     setLocalError(null);
     setCurrentBridgeStep("initial");
   };
@@ -169,14 +171,14 @@ export function useBridge() {
       };
 
   const totalProgramFees = estimate?.totalBridgeFee ?? "0";
-  const effectiveRelayFee = estimate?.relayerFee ?? relayFeeDisplay;
+  const relayerFee = estimate?.relayerFee ?? "0";
+  const canBridge = !!estimate && !isEstimating;
 
   return {
     currentBridgeStep,
     bridgeAmount,
     setBridgeAmount,
-    relayFeeDisplay: effectiveRelayFee,
-    setRelayFeeDisplay,
+    relayFeeDisplay: relayerFee,
     originNetwork,
     destinationNetwork,
     isSolanaToQubic,
@@ -189,6 +191,7 @@ export function useBridge() {
     totalProgramFees,
     isBridging: bridge.isLoading || inbound.isLoading,
     isEstimating,
+    canBridge,
     error:
       localError ?? bridge.outboundError ?? inbound.inboundError ?? estimateError ?? trackingError,
     txResult: isSolanaToQubic ? bridge.txResult : inbound.txResult,
