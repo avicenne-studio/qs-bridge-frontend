@@ -21,12 +21,13 @@ export default function BridgePage() {
           bridgeAmount={bridge.bridgeAmount}
           setBridgeAmount={bridge.setBridgeAmount}
           relayFeeDisplay={bridge.relayFeeDisplay}
-          onRelayFeeDisplayChange={bridge.setRelayFeeDisplay}
           originNetwork={bridge.originNetwork}
           destinationNetwork={bridge.destinationNetwork}
           onSwitchDirection={bridge.switchDirection}
           onBridge={bridge.handleBridge}
           isBridging={bridge.isBridging}
+          canBridge={bridge.canBridge}
+          isEstimating={bridge.isEstimating}
           originWalletConfig={bridge.originWalletConfig}
           destinationWalletConfig={bridge.destinationWalletConfig}
           feesAmount={bridge.totalProgramFees}

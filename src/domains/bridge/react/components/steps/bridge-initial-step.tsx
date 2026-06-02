@@ -12,17 +12,18 @@ interface Props {
   bridgeAmount: string;
   setBridgeAmount: (amount: string) => void;
   relayFeeDisplay: string;
-  onRelayFeeDisplayChange: (display: string) => void;
   originNetwork: NetworkTagNetwork;
   destinationNetwork: NetworkTagNetwork;
   onSwitchDirection: () => void;
   onBridge: () => void;
   isBridging: boolean;
+  canBridge: boolean;
+  isEstimating: boolean;
   originWalletConfig: NetworkDirectionInformationProps;
   destinationWalletConfig: NetworkDirectionInformationProps;
   feesAmount: string;
   error: string | null;
-  isSolanaToQubic: boolean;
+  isSolanaToQubic?: boolean;
   isPaused?: boolean;
 }
 
@@ -30,19 +31,21 @@ export default function BridgeInitialStep({
   bridgeAmount,
   setBridgeAmount,
   relayFeeDisplay,
-  onRelayFeeDisplayChange,
   originNetwork,
   destinationNetwork,
   onSwitchDirection,
   onBridge,
   isBridging,
+  canBridge,
+  isEstimating,
   originWalletConfig,
   destinationWalletConfig,
   feesAmount,
   error,
-  isSolanaToQubic,
   isPaused,
 }: Props) {
+  const isBridgeDisabled = isPaused || !canBridge || isBridging;
+
   return (
     <>
       <div className="grid grid-cols-2 gap-10">
@@ -68,7 +71,7 @@ export default function BridgeInitialStep({
               relayFeesDisplay={relayFeeDisplay}
               amount={bridgeAmount}
               setAmount={setBridgeAmount}
-              onRelayFeeDisplayChange={isSolanaToQubic ? onRelayFeeDisplayChange : undefined}
+              isLoadingFees={isEstimating}
             />
           </div>
 
@@ -114,11 +117,11 @@ export default function BridgeInitialStep({
         <span className="col-span-1 col-start-2">
           <Button
             variant="default"
-            label={isPaused ? "Bridge (paused)" : "Bridge"}
+            label={isPaused ? "Bridge (paused)" : isEstimating ? "Calculating fees…" : "Bridge"}
             action={onBridge}
             isFullWidth
             isLoading={isBridging}
-            isDisabled={isPaused}
+            isDisabled={isBridgeDisabled}
           />
         </span>
       </div>

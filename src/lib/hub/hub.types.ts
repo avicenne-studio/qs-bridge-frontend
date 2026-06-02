@@ -81,8 +81,8 @@ export type HubOracleHealth = {
   url: string;
   status: "ok" | "down";
   timestamp: string;
-  relayerFeeSolana: string;
-  relayerFeeQubic: string;
+  relayerFeeToSolana: string;
+  relayerFeeToQubic: string;
 };
 
 export type HubOraclesHealthResponse = {
