@@ -38,7 +38,7 @@ export default function OverrideInboundModal({ nonce }: Props) {
         </div>
       )}
 
-      {isMetaMask && (
+      {isQubicConnected && isMetaMask && (
         <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2 text-xs text-amber-400">
           MetaMask cannot sign Qubic transactions — reconnect with a seed or WalletConnect.
         </div>

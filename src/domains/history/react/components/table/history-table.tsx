@@ -16,7 +16,10 @@ function OverrideActionCell({ row }: { row: HistoryRow }) {
 
   const canOverrideOutbound = !!row.nonce && row.networkOut !== undefined;
   const canOverrideInbound =
-    row.inboundNonce !== undefined && row.status === "pending" && row.sourceChain === "qubic";
+    row.inboundNonce !== undefined &&
+    !Number.isNaN(row.inboundNonce) &&
+    row.status === "pending" &&
+    row.sourceChain === "qubic";
 
   return (
     <CellLayout type="td">
