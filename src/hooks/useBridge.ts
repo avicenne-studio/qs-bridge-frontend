@@ -10,6 +10,7 @@ import { useBridgeOutbound } from "@/hooks/useBridgeOutbound";
 import { useBridgeInbound } from "@/hooks/useBridgeInbound";
 import { qubicIdentityToBytes } from "@/lib/bridge/qubicAddress";
 import { displayToRaw } from "@/lib/bridge/amounts";
+import { bytesToHex } from "@/lib/qubicIdentity";
 import { useFeeEstimate } from "@/hooks/useFeeEstimate";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import { queryGetConfig } from "@/lib/bridge/qubic/query";
@@ -30,16 +31,20 @@ export function useBridge() {
   const isSolanaToQubic = originNetwork === NETWORK.Solana;
   const destinationNetwork = isSolanaToQubic ? NETWORK.Qubic : NETWORK.Solana;
 
-  const activeTxSignature = isSolanaToQubic
-    ? bridge.txResult?.signature
-    : inbound.txResult?.signature;
+  const activeSourceNonce = isSolanaToQubic
+    ? bridge.lastOrder
+      ? bytesToHex(bridge.lastOrder.nonce)
+      : null
+    : inbound.lastLock
+      ? "0".repeat(56) + inbound.lastLock.nonce.toString(16).padStart(8, "0")
+      : null;
 
   const {
     orderStatus,
     destinationTrxHash,
     isPolling: isTrackingOrder,
     trackingError,
-  } = useOrderTracking(activeTxSignature ?? null);
+  } = useOrderTracking(activeSourceNonce);
 
   const { estimate, isEstimating, estimateError } = useFeeEstimate(
     originNetwork,

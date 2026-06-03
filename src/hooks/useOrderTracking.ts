@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchOrderByTrxHash, HubApiError } from "@/lib/hub/hub-client";
+import { fetchOrderBySourceNonce, HubApiError } from "@/lib/hub/hub-client";
 import { mapHubStatus } from "@/lib/hub/hub-mappers";
 import type { OrderStatus } from "@/domains/activity/activity.types";
 
@@ -9,7 +9,7 @@ const MAX_DURATION_MS = 10 * 60 * 1_000;
 
 const TERMINAL_STATUSES: OrderStatus[] = ["finalized", "failed"];
 
-export function useOrderTracking(txSignature: string | null) {
+export function useOrderTracking(sourceNonce: string | null) {
   const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
   const [destinationTrxHash, setDestinationTrxHash] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
@@ -17,7 +17,7 @@ export function useOrderTracking(txSignature: string | null) {
   const startedAt = useRef<number>(0);
 
   useEffect(() => {
-    if (!txSignature) {
+    if (!sourceNonce) {
       setOrderStatus(null);
       setDestinationTrxHash(null);
       setIsPolling(false);
@@ -44,8 +44,8 @@ export function useOrderTracking(txSignature: string | null) {
       }
 
       try {
-        if (!txSignature) return;
-        const res = await fetchOrderByTrxHash(txSignature, controller.signal);
+        if (!sourceNonce) return;
+        const res = await fetchOrderBySourceNonce(sourceNonce, controller.signal);
         if (controller.signal.aborted) return;
 
         const status = mapHubStatus(res.data.status);
@@ -77,7 +77,7 @@ export function useOrderTracking(txSignature: string | null) {
       controller.abort();
       clearTimeout(timeoutId);
     };
-  }, [txSignature]);
+  }, [sourceNonce]);
 
   return { orderStatus, destinationTrxHash, isPolling, trackingError };
 }
