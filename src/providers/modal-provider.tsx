@@ -3,6 +3,7 @@ import { useModalStore } from "@/stores/modal-store";
 import { ModalType } from "@/types/modal";
 import type { ModalData } from "@/types/modal";
 import OverrideOrderModal from "../components/modals/override-order-modal";
+import OverrideInboundModal from "../components/modals/override-inbound-modal";
 import type { ReactNode } from "react";
 import cn from "@/utils/classnames";
 import { X } from "lucide-react";
@@ -18,6 +19,13 @@ function ModalContent() {
       const data = modalState.data as ModalData<"overrideOrder">;
       title = "Override Order";
       content = <OverrideOrderModal {...data} />;
+      break;
+    }
+
+    case ModalType.overrideInboundOrder: {
+      const data = modalState.data as ModalData<"overrideInboundOrder">;
+      title = "Override Order";
+      content = <OverrideInboundModal {...data} />;
       break;
     }
 

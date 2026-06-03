@@ -1,7 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import type { HubOrder, HubChain, HubOrderStatus, HubOrdersQuery } from "./hub.types";
-import type { ActivityRow, OrderStatus } from "@/domains/activity/activity.types";
-import type { HistoryFilter } from "@/domains/history/history.types";
+import type { OrderStatus } from "@/domains/activity/activity.types";
+import type { HistoryFilter, HistoryRow } from "@/domains/history/history.types";
 import { qubicIdentityToBytes } from "@/lib/bridge/qubicAddress";
 import { bytesToHex, hexToBytes } from "@/lib/qubicIdentity";
 import { getQubicClient } from "@/lib/qubicClient";
@@ -50,7 +50,7 @@ function truncateOrderId(id: string): string {
   return `${id.slice(0, 6)}...${id.slice(-4)}`;
 }
 
-export async function mapHubOrderToRow(order: HubOrder): Promise<ActivityRow> {
+export async function mapHubOrderToRow(order: HubOrder): Promise<HistoryRow> {
   const [from, to] = await Promise.all([
     formatAddress(order.from, order.source),
     formatAddress(order.to, order.dest),
@@ -68,6 +68,9 @@ export async function mapHubOrderToRow(order: HubOrder): Promise<ActivityRow> {
     amount: order.amount,
     date: order.created_at,
     originTrxHash: order.origin_trx_hash,
+    // NOTE: source_nonce for Qubic orders is expected to be a decimal uint32 string.
+    // Verify this assumption against the hub API before deploying.
+    ...(order.source === "qubic" && { inboundNonce: Number(order.source_nonce) }),
   };
 }
 

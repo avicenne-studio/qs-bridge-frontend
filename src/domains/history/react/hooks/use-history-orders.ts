@@ -6,9 +6,8 @@ import {
   solanaAddressToHex,
   qubicAddressToHex,
 } from "@/lib/hub/hub-mappers";
-import type { ActivityRow } from "@/domains/activity/activity.types";
 import type { HubPagination, HubOrdersQuery } from "@/lib/hub/hub.types";
-import type { HistoryFilter } from "@/domains/history/history.types";
+import type { HistoryFilter, HistoryRow } from "@/domains/history/history.types";
 
 const PAGE_SIZE = 5;
 
@@ -26,7 +25,7 @@ export function useHistoryOrders({
   qubicAddress,
 }: UseHistoryOrdersParams) {
   const [page, setPage] = useState(1);
-  const [rows, setRows] = useState<ActivityRow[]>([]);
+  const [rows, setRows] = useState<HistoryRow[]>([]);
   const [pagination, setPagination] = useState<HubPagination>({
     page: 1,
     limit: PAGE_SIZE,

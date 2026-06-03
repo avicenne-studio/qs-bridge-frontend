@@ -14,11 +14,13 @@ import { ModalType } from "@/types/modal";
 function OverrideActionCell({ row }: { row: HistoryRow }) {
   const { openModal } = useModalStore();
 
-  const canOverride = !!row.nonce && row.networkOut !== undefined;
+  const canOverrideOutbound = !!row.nonce && row.networkOut !== undefined;
+  const canOverrideInbound =
+    row.inboundNonce !== undefined && row.status === "pending" && row.sourceChain === "qubic";
 
   return (
     <CellLayout type="td">
-      {canOverride && (
+      {canOverrideOutbound && (
         <Button
           variant="default"
           size="small"
@@ -26,6 +28,14 @@ function OverrideActionCell({ row }: { row: HistoryRow }) {
           action={() =>
             openModal(ModalType.overrideOrder, { nonce: row.nonce!, networkOut: row.networkOut! })
           }
+        />
+      )}
+      {canOverrideInbound && (
+        <Button
+          variant="default"
+          size="small"
+          label="Override"
+          action={() => openModal(ModalType.overrideInboundOrder, { nonce: row.inboundNonce! })}
         />
       )}
     </CellLayout>
