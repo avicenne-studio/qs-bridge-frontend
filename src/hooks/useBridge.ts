@@ -31,13 +31,15 @@ export function useBridge() {
   const isSolanaToQubic = originNetwork === NETWORK.Solana;
   const destinationNetwork = isSolanaToQubic ? NETWORK.Qubic : NETWORK.Solana;
 
-  const activeSourceNonce = isSolanaToQubic
-    ? bridge.lastOrder
-      ? bytesToHex(bridge.lastOrder.nonce)
-      : null
-    : inbound.lastLock
-      ? "0".repeat(56) + inbound.lastLock.nonce.toString(16).padStart(8, "0")
-      : null;
+  let activeSourceNonce: string | null = null;
+
+  if (isSolanaToQubic) {
+    if (bridge.lastOrder) {
+      activeSourceNonce = bytesToHex(bridge.lastOrder.nonce);
+    }
+  } else if (inbound.lastLock) {
+    activeSourceNonce = "0".repeat(56) + inbound.lastLock.nonce.toString(16).padStart(8, "0");
+  }
 
   const {
     orderStatus,
