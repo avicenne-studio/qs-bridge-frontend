@@ -56,7 +56,15 @@ export async function sendTransaction(
     throw new Error("Transaction was rejected");
   }
 
-  await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
+  const result = await connection.confirmTransaction(
+    { signature, blockhash, lastValidBlockHeight },
+    "confirmed",
+  );
+
+  if (result.value.err) {
+    const errDetail = JSON.stringify(result.value.err);
+    throw new Error(`Transaction failed on-chain: ${errDetail}`);
+  }
 
   return {
     signature,

@@ -44,7 +44,7 @@ export type HubOrderWithSignatures = HubOrder & {
   signatures: string[];
 };
 
-export type HubOrderByTrxHashResponse = {
+export type HubOrderBySourceNonceResponse = {
   data: HubOrderWithSignatures;
 };
 

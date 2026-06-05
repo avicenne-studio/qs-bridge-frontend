@@ -1,7 +1,7 @@
 import type {
   HubOrdersQuery,
   HubOrdersResponse,
-  HubOrderByTrxHashResponse,
+  HubOrderBySourceNonceResponse,
   HubEstimateBody,
   HubEstimateResponse,
   HubBridgeHealth,
@@ -52,13 +52,16 @@ export function fetchOrders(
   return hubFetch<HubOrdersResponse>(`/api/orders${qs ? `?${qs}` : ""}`, { signal });
 }
 
-export function fetchOrderByTrxHash(
-  hash: string,
+export function fetchOrderBySourceNonce(
+  nonce: string,
   signal?: AbortSignal,
-): Promise<HubOrderByTrxHashResponse> {
-  return hubFetch<HubOrderByTrxHashResponse>(`/api/orders/trx-hash/${encodeURIComponent(hash)}`, {
-    signal,
-  });
+): Promise<HubOrderBySourceNonceResponse> {
+  return hubFetch<HubOrderBySourceNonceResponse>(
+    `/api/orders/source-nonce/${encodeURIComponent(nonce)}`,
+    {
+      signal,
+    },
+  );
 }
 
 export function estimateFees(
