@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowLeft, KeyRound, QrCode, UploadCloud, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowLeft, KeyRound, QrCode, Wallet } from "lucide-react";
 import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import cn from "@/utils/classnames";
 import WalletModal from "./wallet-modal";
 import WalletConnectPage from "./qubic/wallet-connect-page";
 import MetaMaskPage from "./qubic/metamask-page";
 import SeedPage from "./qubic/seed-page";
-import VaultPage from "./qubic/vault-page";
 
-type Method = "walletconnect" | "metamask" | "seed" | "vault";
+type Method = "walletconnect" | "metamask" | "seed";
 
 interface Props {
   open: boolean;
@@ -52,12 +51,6 @@ export default function QubicWalletModal({ open, onClose }: Props) {
       label: "Seed Import",
       description: "Enter your seed phrase or private key",
       icon: <KeyRound size={18} />,
-    },
-    {
-      id: "vault",
-      label: "Vault File",
-      description: "Unlock a .qubic-vault file",
-      icon: <UploadCloud size={18} />,
     },
   ];
 
@@ -205,7 +198,6 @@ function PageContent({
       {page === "walletconnect" && <WalletConnectPage qubic={qubic} onError={onError} />}
       {page === "metamask" && <MetaMaskPage qubic={qubic} onError={onError} />}
       {page === "seed" && <SeedPage qubic={qubic} onError={onError} />}
-      {page === "vault" && <VaultPage qubic={qubic} onError={onError} />}
     </div>
   );
 }

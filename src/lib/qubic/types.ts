@@ -6,7 +6,7 @@ export type QubicAccount = {
   amount?: number;
 };
 
-export type ConnectionMethod = "walletconnect" | "metamask" | "seed" | "vault" | null;
+export type ConnectionMethod = "walletconnect" | "metamask" | "seed" | null;
 
 export type QubicSession =
   | {
@@ -20,7 +20,7 @@ export type QubicSession =
     }
   | {
       kind: "local";
-      method: "metamask" | "seed" | "vault";
+      method: "metamask" | "seed";
       address: Address;
       privateKeyHex?: string;
       seed?: string;

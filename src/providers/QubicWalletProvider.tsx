@@ -11,7 +11,6 @@ import type { QubicAccount, QubicSession, ConnectionMethod } from "@/lib/qubic/t
 import { connectViaWalletConnect, disconnectWC } from "@/lib/qubic/connectWalletConnect";
 import { connectViaMetaMask } from "@/lib/qubic/connectMetaMask";
 import { connectViaSeed } from "@/lib/qubic/connectSeed";
-import { connectViaVaultFile } from "@/lib/qubic/connectVault";
 import { signMessageLocally } from "@/lib/qubic/signLocal";
 import { useQubicSignClient } from "@/hooks/useQubicSignClient";
 import { useWCBalancePolling, useLocalBalancePolling } from "@/hooks/useBalancePolling";
@@ -37,7 +36,6 @@ export interface QubicWalletState {
   cancelPairing: () => void;
   connectMetaMask: () => Promise<void>;
   connectWithSeed: (seed: string) => Promise<void>;
-  connectWithVaultFile: (file: File, password: string) => Promise<void>;
   disconnect: () => Promise<void>;
   signMessage: (data: Uint8Array) => Promise<Uint8Array>;
   sendQubicTransaction: (params: {
@@ -207,15 +205,6 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     }
   }
 
-  async function handleConnectWithVaultFile(file: File, password: string) {
-    setConnecting(true);
-    try {
-      applyConnect(await connectViaVaultFile(file, password));
-    } finally {
-      setConnecting(false);
-    }
-  }
-
   async function handleSignMessage(data: Uint8Array): Promise<Uint8Array> {
     const s = sessionRef.current;
     if (!s) throw new Error("Not connected");
@@ -298,7 +287,6 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     cancelPairing,
     connectMetaMask: handleConnectMetaMask,
     connectWithSeed: handleConnectWithSeed,
-    connectWithVaultFile: handleConnectWithVaultFile,
     disconnect: handleDisconnect,
     signMessage: handleSignMessage,
     sendQubicTransaction: handleSendQubicTransaction,
