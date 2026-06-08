@@ -3,6 +3,7 @@ import BridgeInitialStep from "./components/steps/bridge-initial-step";
 import BridgeSuccessStep from "./components/steps/bridge-success-step";
 import { useBridge } from "@/hooks/useBridge";
 import { useBridgeHealthContext } from "@/providers/BridgeHealthProvider";
+import QubicWalletModal from "@/components/wallet-area/modals/qubic-wallet-modal";
 
 export default function BridgePage() {
   const bridge = useBridge();
@@ -34,8 +35,21 @@ export default function BridgePage() {
           error={bridge.error}
           isSolanaToQubic={bridge.isSolanaToQubic}
           isPaused={isPaused}
+          destinationWalletConnected={bridge.destinationWalletConnected}
+          isEditingRecipient={bridge.isEditingRecipient}
+          customRecipientAddress={bridge.customRecipientAddress}
+          onCustomRecipientChange={bridge.setCustomRecipientAddress}
+          onStartEditRecipient={bridge.startEditRecipient}
+          onCancelEditRecipient={bridge.cancelEditRecipient}
+          customAddressError={bridge.customAddressError}
+          onConnectDestinationWallet={bridge.openDestinationWallet}
         />
       )}
+
+      <QubicWalletModal
+        open={bridge.qubicModalOpen}
+        onClose={() => bridge.setQubicModalOpen(false)}
+      />
 
       {bridge.currentBridgeStep === "successful" && (
         <BridgeSuccessStep

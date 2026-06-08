@@ -9,6 +9,7 @@ import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import { useBridgeOutbound } from "@/hooks/useBridgeOutbound";
 import { useBridgeInbound } from "@/hooks/useBridgeInbound";
 import { qubicIdentityToBytes } from "@/lib/bridge/qubicAddress";
+import { isValidQubicAddress, isValidSolanaAddress } from "@/lib/bridge/addressValidation";
 import { displayToRaw } from "@/lib/bridge/amounts";
 import { bytesToHex } from "@/lib/qubicIdentity";
 import { useFeeEstimate } from "@/hooks/useFeeEstimate";
@@ -22,6 +23,9 @@ export function useBridge() {
   const [bridgeAmount, setBridgeAmount] = useState("");
   const [originNetwork, setOriginNetwork] = useState<NetworkTagNetwork>(NETWORK.Solana);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [customRecipientAddress, setCustomRecipientAddress] = useState("");
+  const [isEditingRecipient, setIsEditingRecipient] = useState(false);
+  const [qubicModalOpen, setQubicModalOpen] = useState(false);
 
   const solanaWallet = useSolanaWallet();
   const qubicWallet = useQubicWallet();
@@ -30,6 +34,19 @@ export function useBridge() {
 
   const isSolanaToQubic = originNetwork === NETWORK.Solana;
   const destinationNetwork = isSolanaToQubic ? NETWORK.Qubic : NETWORK.Solana;
+
+  const destinationConnectedAddress = isSolanaToQubic ? qubicWallet.address : solanaWallet.address;
+  const usesCustomAddress = isEditingRecipient || !destinationConnectedAddress;
+
+  const customAddressValid = customRecipientAddress
+    ? (isSolanaToQubic ? isValidQubicAddress : isValidSolanaAddress)(customRecipientAddress)
+    : null;
+
+  const effectiveDestinationAddress: string | null = usesCustomAddress
+    ? customAddressValid
+      ? customRecipientAddress
+      : null
+    : (destinationConnectedAddress ?? null);
 
   let activeSourceNonce: string | null = null;
 
@@ -48,15 +65,20 @@ export function useBridge() {
     trackingError,
   } = useOrderTracking(activeSourceNonce);
 
+  const solanaFeeAddr = isSolanaToQubic ? solanaWallet.address : effectiveDestinationAddress;
+  const qubicFeeAddr = isSolanaToQubic ? effectiveDestinationAddress : qubicWallet.address;
+
   const { estimate, isEstimating, estimateError } = useFeeEstimate(
     originNetwork,
     bridgeAmount,
-    solanaWallet.address ?? null,
-    qubicWallet.address ?? null,
+    solanaFeeAddr ?? null,
+    qubicFeeAddr ?? null,
   );
 
   const switchDirection = () => {
     setOriginNetwork((prev) => (prev === NETWORK.Qubic ? NETWORK.Solana : NETWORK.Qubic));
+    setCustomRecipientAddress("");
+    setIsEditingRecipient(false);
   };
 
   const handleBridge = async () => {
@@ -73,9 +95,8 @@ export function useBridge() {
       return;
     }
 
-    const destinationConnected = isSolanaToQubic ? !!qubicWallet.address : !!solanaWallet.address;
-    if (!destinationConnected) {
-      toast.error(`Please connect your ${isSolanaToQubic ? "Qubic" : "Solana"} wallet`);
+    if (!effectiveDestinationAddress) {
+      toast.error(`Please enter a valid recipient ${isSolanaToQubic ? "Qubic" : "Solana"} address`);
       return;
     }
 
@@ -95,7 +116,7 @@ export function useBridge() {
     let result;
 
     if (isSolanaToQubic) {
-      const toAddress = qubicIdentityToBytes(qubicWallet.address as string);
+      const toAddress = qubicIdentityToBytes(effectiveDestinationAddress);
       const { orderEra } = await queryGetConfig();
       result = await bridge.sendOutbound({
         amount: displayToRaw(bridgeAmount),
@@ -106,7 +127,7 @@ export function useBridge() {
     } else {
       result = await inbound.sendLock({
         amount: BigInt(Math.floor(parseFloat(bridgeAmount))),
-        toSolanaAddress: solanaWallet.address as string,
+        toSolanaAddress: effectiveDestinationAddress,
         relayerFee: BigInt(Math.floor(parseFloat(relayerFee))),
       });
     }
@@ -122,6 +143,8 @@ export function useBridge() {
     setBridgeAmount("");
     setLocalError(null);
     setCurrentBridgeStep("initial");
+    setCustomRecipientAddress("");
+    setIsEditingRecipient(false);
   };
 
   const originWalletConfig: NetworkDirectionInformationProps = isSolanaToQubic
@@ -140,17 +163,21 @@ export function useBridge() {
         direction: "origin",
       };
 
+  const destinationDisplayAddress = (effectiveDestinationAddress ??
+    destinationConnectedAddress ??
+    "Not connected") as Address;
+
   const destinationWalletConfig: NetworkDirectionInformationProps = isSolanaToQubic
     ? {
         network: NETWORK.Qubic,
-        walletAddress: (qubicWallet.address ?? "Not connected") as Address,
+        walletAddress: destinationDisplayAddress,
         balance: qubicWallet.balance ?? "0",
         currency: "QUBIC",
         direction: "destination",
       }
     : {
         network: NETWORK.Solana,
-        walletAddress: (solanaWallet.address ?? "Not connected") as Address,
+        walletAddress: destinationDisplayAddress,
         balance: solanaWallet.balance ?? "0",
         currency: "wQUBIC",
         direction: "destination",
@@ -159,6 +186,11 @@ export function useBridge() {
   const totalProgramFees = estimate?.totalBridgeFee ?? "0";
   const relayerFee = estimate?.relayerFee ?? "0";
   const canBridge = !!estimate && !isEstimating;
+
+  const customAddressError =
+    customRecipientAddress && customAddressValid === false
+      ? `Invalid ${isSolanaToQubic ? "Qubic" : "Solana"} address`
+      : null;
 
   return {
     currentBridgeStep,
@@ -186,5 +218,20 @@ export function useBridge() {
     orderStatus,
     destinationTrxHash,
     isTrackingOrder,
+    customRecipientAddress,
+    setCustomRecipientAddress,
+    isEditingRecipient,
+    startEditRecipient: () => setIsEditingRecipient(true),
+    cancelEditRecipient: () => {
+      setCustomRecipientAddress("");
+      setIsEditingRecipient(false);
+    },
+    customAddressError,
+    destinationWalletConnected: !!destinationConnectedAddress,
+    openDestinationWallet: isSolanaToQubic
+      ? () => setQubicModalOpen(true)
+      : () => solanaWallet.openModal(),
+    qubicModalOpen,
+    setQubicModalOpen,
   };
 }
