@@ -21,7 +21,6 @@
   "dependencies": {
     "@ardata-tech/qubic-js": "^1.0.1",
     "@qubic-lib/qubic-ts-library": "^0.1.6",
-    "@qubic-lib/qubic-ts-vault-library": "^1.0.2",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-tooltip": "^1.2.8",

@@ -9,9 +9,7 @@ import {
 import { buildQubicDeepLink } from "@/lib/qubicWallet";
 import type { QubicAccount, QubicSession, ConnectionMethod } from "@/lib/qubic/types";
 import { connectViaWalletConnect, disconnectWC } from "@/lib/qubic/connectWalletConnect";
-import { connectViaMetaMask } from "@/lib/qubic/connectMetaMask";
 import { connectViaSeed } from "@/lib/qubic/connectSeed";
-import { connectViaVaultFile } from "@/lib/qubic/connectVault";
 import { signMessageLocally } from "@/lib/qubic/signLocal";
 import { useQubicSignClient } from "@/hooks/useQubicSignClient";
 import { useWCBalancePolling, useLocalBalancePolling } from "@/hooks/useBalancePolling";
@@ -32,12 +30,9 @@ export interface QubicWalletState {
   accounts: QubicAccount[];
   walletConnectUri: string | null;
   deepLink: string | null;
-  metamaskAvailable: boolean;
   connectWalletConnect: () => Promise<void>;
   cancelPairing: () => void;
-  connectMetaMask: () => Promise<void>;
   connectWithSeed: (seed: string) => Promise<void>;
-  connectWithVaultFile: (file: File, password: string) => Promise<void>;
   disconnect: () => Promise<void>;
   signMessage: (data: Uint8Array) => Promise<Uint8Array>;
   sendQubicTransaction: (params: {
@@ -95,7 +90,6 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
   );
   const [walletConnectUri, setWalletConnectUri] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
-  const [metamaskAvailable, setMetamaskAvailable] = useState(false);
 
   const sessionRef = useRef<QubicSession | null>(null);
   sessionRef.current = session;
@@ -143,14 +137,6 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     if (restoredSession) setSession(restoredSession);
   }, [restoredSession]);
 
-  useEffect(() => {
-    setMetamaskAvailable(
-      Boolean(
-        window.ethereum && typeof window.ethereum === "object" && "request" in window.ethereum,
-      ),
-    );
-  }, []);
-
   const wcTopic = session?.kind === "walletconnect" ? session.topic : null;
   const localAddress = session?.kind === "local" ? session.address : null;
 
@@ -189,28 +175,10 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     setConnecting(false);
   }
 
-  async function handleConnectMetaMask() {
-    setConnecting(true);
-    try {
-      applyConnect(await connectViaMetaMask());
-    } finally {
-      setConnecting(false);
-    }
-  }
-
   async function handleConnectWithSeed(seed: string) {
     setConnecting(true);
     try {
       applyConnect(await connectViaSeed(seed));
-    } finally {
-      setConnecting(false);
-    }
-  }
-
-  async function handleConnectWithVaultFile(file: File, password: string) {
-    setConnecting(true);
-    try {
-      applyConnect(await connectViaVaultFile(file, password));
     } finally {
       setConnecting(false);
     }
@@ -293,12 +261,9 @@ export default function QubicWalletProvider({ children }: PropsWithChildren) {
     accounts,
     walletConnectUri,
     deepLink,
-    metamaskAvailable,
     connectWalletConnect: handleConnectWalletConnect,
     cancelPairing,
-    connectMetaMask: handleConnectMetaMask,
     connectWithSeed: handleConnectWithSeed,
-    connectWithVaultFile: handleConnectWithVaultFile,
     disconnect: handleDisconnect,
     signMessage: handleSignMessage,
     sendQubicTransaction: handleSendQubicTransaction,
