@@ -9,8 +9,6 @@ import {
   contractDestination,
 } from "./constants";
 
-const OVERRIDE_LOCK_INPUT_TYPE = 2;
-
 // ESM interop: unwrap CJS default export
 const mod = qubicLib as unknown as { default: typeof qubicLib };
 const { QubicTransaction, DynamicPayload, PublicKey, Long } = mod.default ?? qubicLib;
@@ -62,37 +60,6 @@ export async function buildAndBroadcastLockTx(
     .setTick(targetTick)
     .setInputType(LOCK_INPUT_TYPE)
     .setInputSize(lockPayload.length)
-    .setPayload(payload);
-
-  const builtTx = await tx.build(seed);
-  const txId = tx.getId();
-
-  await broadcastQubicTx(new Uint8Array(builtTx));
-
-  return { txId };
-}
-
-export async function buildAndBroadcastOverrideLockTx(
-  seed: string,
-  overridePayload: Uint8Array,
-): Promise<{ txId: string }> {
-  const helper = new QubicHelper();
-  const { publicKey } = await helper.createIdPackage(seed);
-
-  const tick = await getCurrentTick();
-  const targetTick = tick + TICK_OFFSET;
-
-  const dest = new PublicKey(contractDestination(QSB_CONTRACT_INDEX));
-  const payload = new DynamicPayload(overridePayload.length);
-  payload.setPayload(overridePayload);
-
-  const tx = new QubicTransaction()
-    .setSourcePublicKey(new PublicKey(publicKey))
-    .setDestinationPublicKey(dest)
-    .setAmount(new Long(0))
-    .setTick(targetTick)
-    .setInputType(OVERRIDE_LOCK_INPUT_TYPE)
-    .setInputSize(overridePayload.length)
     .setPayload(payload);
 
   const builtTx = await tx.build(seed);

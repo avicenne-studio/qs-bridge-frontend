@@ -10,12 +10,8 @@ import {
   serializeOutboundData,
   createOutboundInstruction,
 } from "@/lib/bridge/solana/instructions/outbound";
-import {
-  serializeOverrideOutboundData,
-  createOverrideOutboundInstruction,
-} from "@/lib/bridge/solana/instructions/override-outbound";
 import { sendTransaction } from "@/lib/bridge/solana/send";
-import type { OutboundParams, OverrideOutboundParams, TxResult } from "@/lib/bridge/types";
+import type { OutboundParams, TxResult } from "@/lib/bridge/types";
 
 const WQUBIC_MINT_ADDRESS = import.meta.env.VITE_WQUBIC_MINT_ADDRESS;
 if (!WQUBIC_MINT_ADDRESS) throw new Error("VITE_WQUBIC_MINT_ADDRESS is not set");
@@ -32,7 +28,6 @@ export function useBridgeOutbound() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [outboundError, setOutboundError] = useState<string | null>(null);
-  const [overrideError, setOverrideError] = useState<string | null>(null);
   const [txResult, setTxResult] = useState<TxResult | null>(null);
   const [lastOrder, setLastOrder] = useState<{
     nonce: Uint8Array;
@@ -92,58 +87,16 @@ export function useBridgeOutbound() {
     [provider, userPubkey, userTokenAccount],
   );
 
-  const overrideOutbound = useCallback(
-    async (params: OverrideOutboundParams): Promise<TxResult | null> => {
-      if (!provider || !userPubkey) {
-        setOverrideError("Solana wallet not connected");
-        return null;
-      }
-
-      setIsLoading(true);
-      setOverrideError(null);
-
-      try {
-        const outboundOrder = deriveOutboundOrderPda(params.networkOut, params.nonce);
-
-        const data = serializeOverrideOutboundData({
-          newToAddress: params.newToAddress,
-          newRelayerFee: params.newRelayerFee,
-        });
-
-        const instruction = createOverrideOutboundInstruction({
-          caller: userPubkey,
-          globalState: GLOBAL_STATE_PDA,
-          outboundOrder,
-          data,
-        });
-
-        const result = await sendTransaction(provider, solanaConnection, instruction, userPubkey);
-
-        setTxResult(result);
-        return result;
-      } catch (err) {
-        setOverrideError(err instanceof Error ? err.message : "Override transaction failed");
-        return null;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [provider, userPubkey],
-  );
-
   const reset = useCallback(() => {
     setOutboundError(null);
-    setOverrideError(null);
     setTxResult(null);
     setLastOrder(null);
   }, []);
 
   return {
     sendOutbound,
-    overrideOutbound,
     isLoading,
     outboundError,
-    overrideError,
     txResult,
     lastOrder,
     reset,
