@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowLeft, KeyRound, QrCode, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowLeft, KeyRound, QrCode } from "lucide-react";
 import { useQubicWallet } from "@/providers/QubicWalletProvider";
 import cn from "@/utils/classnames";
 import WalletModal from "./wallet-modal";
 import WalletConnectPage from "./qubic/wallet-connect-page";
-import MetaMaskPage from "./qubic/metamask-page";
 import SeedPage from "./qubic/seed-page";
 
-type Method = "walletconnect" | "metamask" | "seed";
+type Method = "walletconnect" | "seed";
 
 interface Props {
   open: boolean;
@@ -36,15 +35,6 @@ export default function QubicWalletModal({ open, onClose }: Props) {
       description: "Scan a QR code with the official mobile app",
       icon: <QrCode size={18} />,
       badge: "Recommended",
-    },
-    {
-      id: "metamask",
-      label: "MetaMask Snap",
-      description: qubic.metamaskAvailable
-        ? "Use the Qubic Snap inside MetaMask"
-        : "MetaMask not detected",
-      icon: <Wallet size={18} />,
-      disabled: !qubic.metamaskAvailable,
     },
     {
       id: "seed",
@@ -196,7 +186,6 @@ function PageContent({
         </div>
       )}
       {page === "walletconnect" && <WalletConnectPage qubic={qubic} onError={onError} />}
-      {page === "metamask" && <MetaMaskPage qubic={qubic} onError={onError} />}
       {page === "seed" && <SeedPage qubic={qubic} onError={onError} />}
     </div>
   );
