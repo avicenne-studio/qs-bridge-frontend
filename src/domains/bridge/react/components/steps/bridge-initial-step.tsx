@@ -25,6 +25,15 @@ interface Props {
   error: string | null;
   isSolanaToQubic?: boolean;
   isPaused?: boolean;
+  // Custom recipient
+  destinationWalletConnected: boolean;
+  isEditingRecipient: boolean;
+  customRecipientAddress: string;
+  onCustomRecipientChange: (v: string) => void;
+  onStartEditRecipient: () => void;
+  onCancelEditRecipient: () => void;
+  customAddressError: string | null;
+  onConnectDestinationWallet: () => void;
 }
 
 export default function BridgeInitialStep({
@@ -43,6 +52,14 @@ export default function BridgeInitialStep({
   feesAmount,
   error,
   isPaused,
+  destinationWalletConnected,
+  isEditingRecipient,
+  customRecipientAddress,
+  onCustomRecipientChange,
+  onStartEditRecipient,
+  onCancelEditRecipient,
+  customAddressError,
+  onConnectDestinationWallet,
 }: Props) {
   const isBridgeDisabled = isPaused || !canBridge || isBridging;
 
@@ -98,6 +115,15 @@ export default function BridgeInitialStep({
               balance={destinationWalletConfig.balance}
               direction="destination"
               currency={destinationWalletConfig.currency}
+              destinationWalletConnected={destinationWalletConnected}
+              isEditingRecipient={isEditingRecipient}
+              customRecipientAddress={customRecipientAddress}
+              onCustomRecipientChange={onCustomRecipientChange}
+              onStartEditRecipient={onStartEditRecipient}
+              onCancelEditRecipient={onCancelEditRecipient}
+              customAddressError={customAddressError}
+              destinationChain={destinationNetwork}
+              onConnectDestinationWallet={onConnectDestinationWallet}
             />
           </div>
         </div>
